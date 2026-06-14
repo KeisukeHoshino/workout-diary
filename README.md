@@ -4,13 +4,29 @@
 
 ## 使い方
 
-`index.html` をブラウザで開くか、ローカルサーバーで配信してください。
+依存関係をインストールして Vite 開発サーバーを起動します。
 
 ```sh
-python3 -m http.server 5173
+pnpm install
+pnpm dev
 ```
 
-その後、`http://localhost:5173` を開きます。
+その後、表示された `http://localhost:5173` を開きます。
+
+本番ビルドは以下で確認できます。
+
+```sh
+pnpm build
+```
+
+## 技術スタック
+
+- React + TypeScript
+- Vite
+- React Router
+- Dexie / IndexedDB
+- Recharts
+- vite-plugin-pwa
 
 ## 主な機能
 

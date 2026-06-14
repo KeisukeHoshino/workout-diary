@@ -5,43 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#16776f">
   <title>筋トレ日記</title>
-  <link rel="manifest" href="./manifest.webmanifest">
-  <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
-  <div id="app" class="app-shell">
-    <aside class="side-nav" aria-label="主要ナビゲーション">
-      <div class="brand">
-        <span class="brand-mark" aria-hidden="true"></span>
-        <div>
-          <p class="brand-kicker">Workout Diary</p>
-          <h1>筋トレ日記</h1>
-        </div>
-      </div>
-      <nav class="nav-list">
-        <a href="#record" data-route="record">記録</a>
-        <a href="#graphs" data-route="graphs">グラフ</a>
-        <a href="#history" data-route="history">履歴</a>
-        <a href="#manage" data-route="manage">管理</a>
-        <a href="#settings" data-route="settings">設定</a>
-      </nav>
-    </aside>
-
-    <main class="main-panel">
-      <section id="view" class="view" aria-live="polite"></section>
-    </main>
-
-    <nav class="bottom-nav" aria-label="主要ナビゲーション">
-      <a href="#record" data-route="record">記録</a>
-      <a href="#graphs" data-route="graphs">グラフ</a>
-      <a href="#history" data-route="history">履歴</a>
-      <a href="#manage" data-route="manage">管理</a>
-      <a href="#settings" data-route="settings">設定</a>
-    </nav>
-  </div>
-
-  <dialog id="modal" class="modal"></dialog>
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script src="./app.js" defer></script>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
 </body>
 </html>
