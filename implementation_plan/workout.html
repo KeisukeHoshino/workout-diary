@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>今日の記録 - 筋トレ日記アプリ 実装計画</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body data-page-title="今日の記録画面" data-page-slug="workout">
+  <div class="layout">
+    <aside class="sidebar">
+      <h1>筋トレ日記アプリ<br>実装計画</h1>
+      <p class="sub">画面別ファイル構成</p>
+      <nav>
+        <a href="index.html">概要</a><a href="architecture.html">アーキテクチャ</a><a href="workout.html">今日の記録</a><a href="exercises.html">種目・プリセット</a><a href="menus.html">メニュー管理</a><a href="graphs.html">グラフ</a><a href="history-settings.html">履歴・設定</a><a href="testing.html">テスト・リスク</a>
+      </nav>
+    </aside>
+    <main>
+      <div class="hero">
+        <p class="eyebrow">Workout Screen</p>
+        <h2>今日の記録画面</h2>
+        <p>体重、種目カード、セット入力を最短導線で扱う MVP の中心画面。日付ごとの記録は自動保存する。</p>
+      </div>
+
+      <section>
+        <div class="section-head"><h2>1. UIモックアップ</h2></div>
+        <h3>通常状態</h3>
+        <div class="mockup-grid">
+          <div class="phone">
+            <div class="phone-screen">
+              <div class="phone-header">
+                <button class="icon-btn">‹</button>
+                <div><div class="label">今日の記録</div><div class="title">2026-06-14</div></div>
+                <button class="icon-btn">›</button>
+              </div>
+              <div class="phone-body">
+                <div class="metric-row">
+                  <div class="mini-panel"><strong>体重</strong><span>68.4 kg</span></div>
+                  <div class="mini-panel"><strong>保存</strong><span>保存済み</span></div>
+                </div>
+                <div class="set-card">
+                  <strong>ベンチプレス</strong><span>胸・バーベル</span>
+                  <table class="set-table">
+                    <thead><tr><th>#</th><th>kg</th><th>回数</th></tr></thead>
+                    <tbody>
+                      <tr><td>1</td><td><div class="fake-input">60</div></td><td><div class="fake-input">10</div></td></tr>
+                      <tr><td>2</td><td><div class="fake-input">65</div></td><td><div class="fake-input">8</div></td></tr>
+                      <tr><td>3</td><td><div class="fake-input">65</div></td><td><div class="fake-input">7</div></td></tr>
+                    </tbody>
+                  </table>
+                  <div class="primary-action"><span class="pill">+ セット</span></div>
+                </div>
+                <div class="primary-action"><span class="pill">種目追加</span><span class="pill">テンプレート適用</span></div>
+              </div>
+              <div class="tabbar"><span class="active">記録</span><span>グラフ</span><span>履歴</span><span>管理</span></div>
+            </div>
+          </div>
+          <div>
+            <h3>表示要素</h3>
+            <ul>
+              <li>日付ヘッダー: 前日、日付、翌日、カレンダー選択。</li>
+              <li>体重入力: 日付単位で `BodyWeightLog` を upsert。</li>
+              <li>種目カード: `WorkoutExercise` と配下 `WorkoutSet` を表示。</li>
+              <li>追加操作: 種目選択シート、メニューテンプレート選択シートを開く。</li>
+            </ul>
+          </div>
+        </div>
+
+        <h3>メニューテンプレート選択シート表示状態</h3>
+        <div class="mockup-grid">
+          <div class="phone">
+            <div class="phone-screen">
+              <div class="phone-header">
+                <button class="icon-btn">‹</button>
+                <div><div class="label">今日の記録</div><div class="title">2026-06-14</div></div>
+                <button class="icon-btn">›</button>
+              </div>
+              <div class="phone-body">
+                <div class="metric-row">
+                  <div class="mini-panel"><strong>体重</strong><span>68.4 kg</span></div>
+                  <div class="mini-panel"><strong>保存</strong><span>保存済み</span></div>
+                </div>
+                <div class="set-card">
+                  <strong>ベンチプレス</strong><span>胸・バーベル</span>
+                  <table class="set-table">
+                    <tbody>
+                      <tr><td>1</td><td><div class="fake-input">60</div></td><td><div class="fake-input">10</div></td></tr>
+                      <tr><td>2</td><td><div class="fake-input">65</div></td><td><div class="fake-input">8</div></td></tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="primary-action"><span class="pill">種目追加</span><span class="pill">テンプレート適用</span></div>
+              </div>
+              <div class="tabbar"><span class="active">記録</span><span>グラフ</span><span>履歴</span><span>管理</span></div>
+              <div class="sheet-backdrop" aria-label="メニューテンプレート選択シート">
+                <div class="bottom-sheet">
+                  <div class="sheet-handle"></div>
+                  <div class="sheet-title-row">
+                    <strong>テンプレートを選択</strong>
+                    <button class="icon-btn" aria-label="閉じる">×</button>
+                  </div>
+                  <div class="sheet-item"><strong>胸の日</strong><span>3種目・ベンチプレス / ダンベルフライ / ディップス</span></div>
+                  <div style="height:8px"></div>
+                  <div class="sheet-item"><strong>背中の日</strong><span>3種目・ラットプルダウン / ローイング / 懸垂</span></div>
+                  <div style="height:8px"></div>
+                  <div class="sheet-item"><strong>脚の日</strong><span>4種目・スクワット / レッグプレス / レッグカール</span></div>
+                  <div class="primary-action"><span class="pill">メニューを作成</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <h3>複数テンプレート時の選択ルール</h3>
+            <ul>
+              <li>「テンプレート適用」押下でメニューテンプレート選択シートを開く。</li>
+              <li>テンプレートは `MenuTemplate.sortOrder` 昇順で表示する。</li>
+              <li>各行にはメニュー名、登録種目数、主な種目名を表示する。</li>
+              <li>ユーザーが1件を選択すると `applyMenuTemplateToDate(date, menuTemplateId)` を実行する。</li>
+              <li>テンプレートが0件の場合は空状態と「メニューを作成」導線を表示する。</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-head"><h2>2. 状態と操作</h2></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>操作</th><th>イベント</th><th>結果</th></tr></thead>
+            <tbody>
+              <tr><td>日付移動</td><td>`changeDate(date)`</td><td>URL query を更新し対象日の詳細を再取得。</td></tr>
+              <tr><td>体重入力</td><td>`upsertBodyWeight(date, value)`</td><td>400ms デバウンスで日付ごとに保存。</td></tr>
+              <tr><td>種目追加</td><td>`addExerciseToDate(date, exerciseId)`</td><td>既存カードがあればセット追加、なければカードと空セットを作成。</td></tr>
+              <tr><td>テンプレート適用開始</td><td>`openMenuTemplateSheet()`</td><td>メニューテンプレート選択シートを開く。複数テンプレートがある場合は一覧から1件を選ぶ。</td></tr>
+              <tr><td>メニューテンプレート選択</td><td>`applyMenuTemplateToDate(date, menuTemplateId)`</td><td>選択したテンプレート内の種目を表示順で展開する。既存カードがあれば空セットを追加し、なければ種目カードと空の1セット目を作成。</td></tr>
+              <tr><td>セット追加</td><td>`addSet(workoutExerciseId)`</td><td>前セットの重量・回数をコピー。</td></tr>
+              <tr><td>セット編集</td><td>`updateSet(setId, patch)`</td><td>対象行だけ保存状態を表示。</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-head"><h2>3. データフロー</h2></div>
+        <div class="flow-row">
+          <div class="flow-node"><strong>日付決定</strong><span>URL query または端末ローカル日付。</span></div>
+          <div class="flow-node"><strong>WorkoutDetail取得</strong><span>日別記録、体重、種目、セットを結合。</span></div>
+          <div class="flow-node"><strong>テンプレート選択</strong><span>複数テンプレートから1件を選択。0件なら作成導線。</span></div>
+          <div class="flow-node"><strong>入力/テンプレート適用</strong><span>フォーム編集、種目追加、メニューテンプレート展開。</span></div>
+          <div class="flow-node"><strong>自動保存</strong><span>対象レコード単位でデバウンス保存。</span></div>
+          <div class="flow-node"><strong>IndexedDB</strong><span>Dexie Repository 経由で永続化。</span></div>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-head"><h2>4. 重要コード</h2></div>
+        <pre><code class="language-ts">export async function addExerciseToDate(date: LocalDateString, exerciseId: UUID) {
+  await db.transaction('rw', db.workoutDays, db.workoutExercises, db.workoutSets, async () =&gt; {
+    const day = await ensureWorkoutDay(date);
+    const existing = await db.workoutExercises.where({ workoutDayId: day.id, exerciseId }).first();
+
+    if (existing) {
+      await addSet(existing.id);
+      return;
+    }
+
+    const workoutExercise = createWorkoutExercise({
+      workoutDayId: day.id,
+      exerciseId,
+      sortOrder: await nextWorkoutExerciseSortOrder(day.id),
+    });
+
+    await db.workoutExercises.add(workoutExercise);
+    await db.workoutSets.add(createEmptyWorkoutSet(workoutExercise.id, 1));
+  });
+
+  return getWorkoutByDate(date);
+}</code></pre>
+      </section>
+
+      <section class="review-panel">
+        <h3>レビュー指摘Markdown生成</h3>
+        <div class="review-source" data-review-title="1. UIモックアップ"><label>1. UIモックアップ</label><textarea placeholder="指摘を入力"></textarea></div>
+        <div class="review-source" data-review-title="2. 状態と操作"><label>2. 状態と操作</label><textarea placeholder="指摘を入力"></textarea></div>
+        <div class="review-source" data-review-title="3. データフロー"><label>3. データフロー</label><textarea placeholder="指摘を入力"></textarea></div>
+        <div class="review-source" data-review-title="4. 重要コード"><label>4. 重要コード</label><textarea placeholder="指摘を入力"></textarea></div>
+        <div class="button-row"><button class="small-btn" type="button" id="copyPromptBtn">Markdownをコピー</button><button class="small-btn" type="button" id="downloadPromptBtn">Markdownファイルを生成</button><button class="small-btn" type="button" id="clearPromptBtn">入力をクリア</button></div>
+        <textarea class="prompt-output" id="promptOutput" readonly></textarea>
+      </section>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="assets/common.js"></script><script src="assets/review.js"></script>
+</body>
+</html>

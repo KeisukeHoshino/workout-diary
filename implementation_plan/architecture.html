@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>アーキテクチャ - 筋トレ日記アプリ 実装計画</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body data-page-title="アーキテクチャ" data-page-slug="architecture">
+  <div class="layout">
+    <aside class="sidebar">
+      <h1>筋トレ日記アプリ<br>実装計画</h1>
+      <p class="sub">画面別ファイル構成</p>
+      <nav>
+        <a href="index.html">概要</a>
+        <a href="architecture.html">アーキテクチャ</a>
+        <a href="workout.html">今日の記録</a>
+        <a href="exercises.html">種目・プリセット</a>
+        <a href="menus.html">メニュー管理</a>
+        <a href="graphs.html">グラフ</a>
+        <a href="history-settings.html">履歴・設定</a>
+        <a href="testing.html">テスト・リスク</a>
+      </nav>
+    </aside>
+    <main>
+      <div class="hero">
+        <p class="eyebrow">Architecture</p>
+        <h2>アーキテクチャとデータ基盤</h2>
+        <p>UI、ユースケース、ドメイン、保存層を分け、IndexedDB を Infrastructure に閉じ込める。</p>
+      </div>
+
+      <section>
+        <div class="section-head"><h2>1. レイヤ構成</h2></div>
+        <div class="grid">
+          <div class="card"><h3>Presentation</h3><p>画面、コンポーネント、入力、空状態、エラー表示。</p></div>
+          <div class="card"><h3>Application</h3><p>hooks、ユースケース、自動保存、複数ストア操作。</p></div>
+          <div class="card"><h3>Domain</h3><p>型、業務ルール、バリデーション、集計。</p></div>
+          <div class="card"><h3>Infrastructure</h3><p>Dexie、Repository 実装、PWA、初期データ。</p></div>
+        </div>
+        <pre><code>src/
+  app/
+  components/
+  features/
+    workout/
+    exercises/
+    presets/
+    menus/
+    graphs/
+    history/
+    settings/
+  domain/
+    models.ts
+    rules.ts
+    validation.ts
+    graphAggregation.ts
+  infrastructure/
+    db/
+      database.ts
+      seedPresets.ts
+      repositories.ts
+      migrations.ts</code></pre>
+      </section>
+
+      <section>
+        <div class="section-head"><h2>2. IndexedDB スキーマ</h2></div>
+        <pre><code class="language-ts">this.version(1).stores({
+  userSettings: 'id',
+  exercisePresets: 'id, bodyPart, name, sortOrder',
+  exercises: 'id, bodyPart, isActive, sourcePresetId, sortOrder, updatedAt',
+  workoutDays: 'id, &date, updatedAt',
+  workoutExercises: 'id, workoutDayId, exerciseId, [workoutDayId+sortOrder]',
+  workoutSets: 'id, workoutExerciseId, [workoutExerciseId+setNumber]',
+  bodyWeightLogs: 'id, &date, updatedAt',
+  menuTemplates: 'id, sortOrder, updatedAt',
+  menuTemplateExercises: 'id, menuTemplateId, exerciseId, [menuTemplateId+sortOrder]',
+});</code></pre>
+      </section>
+
+      <section>
+        <div class="section-head"><h2>3. Repository 方針</h2></div>
+        <p>画面から Dexie を直接呼ばず、Repository インターフェース経由で操作する。将来は `IndexedDBRepository` を `ApiRepository` や `SyncRepository` に差し替えられる。</p>
+        <pre><code class="language-ts">interface WorkoutRepository {
+  getWorkoutByDate(date: LocalDateString): Promise&lt;WorkoutDetail | null&gt;;
+  ensureWorkoutDay(date: LocalDateString): Promise&lt;WorkoutDay&gt;;
+  addExerciseToDate(date: LocalDateString, exerciseId: UUID): Promise&lt;WorkoutDetail&gt;;
+  addMenuToDate(date: LocalDateString, menuTemplateId: UUID): Promise&lt;WorkoutDetail&gt;;
+  updateSet(id: UUID, patch: Pick&lt;WorkoutSet, 'weightKg' | 'reps'&gt;): Promise&lt;void&gt;;
+  deleteWorkoutDay(date: LocalDateString): Promise&lt;void&gt;;
+}</code></pre>
+      </section>
+
+      <section>
+        <div class="section-head"><h2>4. 自動保存</h2></div>
+        <pre><code class="language-ts">type SaveState = 'idle' | 'dirty' | 'saving' | 'saved' | 'error';
+
+// 同じレコードへの保存は revision で管理し、古い保存結果で新しい入力状態を上書きしない。</code></pre>
+      </section>
+
+      <section class="review-panel">
+        <h3>レビュー指摘Markdown生成</h3>
+        <div class="review-source" data-review-title="1. レイヤ構成"><label>1. レイヤ構成</label><textarea placeholder="指摘を入力"></textarea></div>
+        <div class="review-source" data-review-title="2. IndexedDB スキーマ"><label>2. IndexedDB スキーマ</label><textarea placeholder="指摘を入力"></textarea></div>
+        <div class="review-source" data-review-title="3. Repository 方針"><label>3. Repository 方針</label><textarea placeholder="指摘を入力"></textarea></div>
+        <div class="review-source" data-review-title="4. 自動保存"><label>4. 自動保存</label><textarea placeholder="指摘を入力"></textarea></div>
+        <div class="button-row">
+          <button class="small-btn" type="button" id="copyPromptBtn">Markdownをコピー</button>
+          <button class="small-btn" type="button" id="downloadPromptBtn">Markdownファイルを生成</button>
+          <button class="small-btn" type="button" id="clearPromptBtn">入力をクリア</button>
+        </div>
+        <textarea class="prompt-output" id="promptOutput" readonly></textarea>
+      </section>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="assets/common.js"></script>
+  <script src="assets/review.js"></script>
+</body>
+</html>

@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>メニュー管理 - 筋トレ日記アプリ 実装計画</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body data-page-title="メニュー管理画面" data-page-slug="menus">
+  <div class="layout">
+    <aside class="sidebar">
+      <h1>筋トレ日記アプリ<br>実装計画</h1>
+      <p class="sub">画面別ファイル構成</p>
+      <nav><a href="index.html">概要</a><a href="architecture.html">アーキテクチャ</a><a href="workout.html">今日の記録</a><a href="exercises.html">種目・プリセット</a><a href="menus.html">メニュー管理</a><a href="graphs.html">グラフ</a><a href="history-settings.html">履歴・設定</a><a href="testing.html">テスト・リスク</a></nav>
+    </aside>
+    <main>
+      <div class="hero"><p class="eyebrow">Menus</p><h2>メニュー管理画面</h2><p>1回分の筋トレメニューを作成し、今日の記録へまとめて展開する。</p></div>
+      <section>
+        <div class="section-head"><h2>1. UIモックアップ</h2></div>
+        <div class="mockup-grid">
+          <div class="phone"><div class="phone-screen">
+            <div class="phone-header"><button class="icon-btn">‹</button><div><div class="label">管理</div><div class="title">メニュー</div></div><button class="icon-btn">＋</button></div>
+            <div class="phone-body">
+              <div class="sheet-item"><strong>胸の日</strong><span>ベンチプレス / ダンベルフライ / ディップス</span></div>
+              <div style="height:8px"></div>
+              <div class="sheet-item"><strong>背中の日</strong><span>ラットプルダウン / ローイング / 懸垂</span></div>
+              <div style="height:8px"></div>
+              <div class="sheet-item"><strong>脚の日</strong><span>スクワット / レッグプレス / レッグカール</span></div>
+            </div>
+            <div class="tabbar"><span>記録</span><span>グラフ</span><span>履歴</span><span class="active">管理</span></div>
+          </div></div>
+          <div>
+            <h3>実装ポイント</h3>
+            <ul>
+              <li>メニュー名は必須。メモは任意。</li>
+              <li>メニュー内種目は `MenuTemplateExercise.sortOrder` で保持する。</li>
+              <li>今日へ追加すると `WorkoutExercise` と空の `WorkoutSet` を生成する。</li>
+              <li>既存カードがある場合はカードを増やさず空セットを追加する。</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+      <section>
+        <div class="section-head"><h2>2. データフロー</h2></div>
+        <div class="flow-row">
+          <div class="flow-node"><strong>MenuTemplate</strong><span>ユーザーが作成した1回分メニュー。</span></div>
+          <div class="flow-node"><strong>MenuTemplateExercise</strong><span>sortOrder 昇順で取得。</span></div>
+          <div class="flow-node"><strong>WorkoutExercise</strong><span>既存カードがなければ作成。</span></div>
+          <div class="flow-node"><strong>WorkoutSet</strong><span>空の1セット目を作成。</span></div>
+          <div class="flow-node"><strong>画面更新</strong><span>WorkoutDetail を再取得。</span></div>
+        </div>
+      </section>
+      <section>
+        <div class="section-head"><h2>3. 重要コード</h2></div>
+        <pre><code class="language-ts">export async function addMenuToDate(date: LocalDateString, menuTemplateId: UUID) {
+  await db.transaction('rw', db.workoutDays, db.workoutExercises, db.workoutSets, db.menuTemplateExercises, async () =&gt; {
+    const day = await ensureWorkoutDay(date);
+    const items = await db.menuTemplateExercises
+      .where({ menuTemplateId })
+      .sortBy('sortOrder');
+
+    for (const item of items) {
+      const existing = await db.workoutExercises.where({ workoutDayId: day.id, exerciseId: item.exerciseId }).first();
+      if (existing) {
+        await db.workoutSets.add(createEmptyWorkoutSet(existing.id, await nextSetNumber(existing.id)));
+        continue;
+      }
+      const workoutExercise = createWorkoutExercise({ workoutDayId: day.id, exerciseId: item.exerciseId, sortOrder: await nextWorkoutExerciseSortOrder(day.id) });
+      await db.workoutExercises.add(workoutExercise);
+      await db.workoutSets.add(createEmptyWorkoutSet(workoutExercise.id, 1));
+    }
+  });
+  return getWorkoutByDate(date);
+}</code></pre>
+      </section>
+      <section class="review-panel">
+        <h3>レビュー指摘Markdown生成</h3>
+        <div class="review-source" data-review-title="1. UIモックアップ"><label>1. UIモックアップ</label><textarea placeholder="指摘を入力"></textarea></div>
+        <div class="review-source" data-review-title="2. データフロー"><label>2. データフロー</label><textarea placeholder="指摘を入力"></textarea></div>
+        <div class="review-source" data-review-title="3. 重要コード"><label>3. 重要コード</label><textarea placeholder="指摘を入力"></textarea></div>
+        <div class="button-row"><button class="small-btn" type="button" id="copyPromptBtn">Markdownをコピー</button><button class="small-btn" type="button" id="downloadPromptBtn">Markdownファイルを生成</button><button class="small-btn" type="button" id="clearPromptBtn">入力をクリア</button></div>
+        <textarea class="prompt-output" id="promptOutput" readonly></textarea>
+      </section>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="assets/common.js"></script><script src="assets/review.js"></script>
+</body>
+</html>

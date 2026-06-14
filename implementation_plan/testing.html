@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>テスト・リスク - 筋トレ日記アプリ 実装計画</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body data-page-title="テスト・リスク" data-page-slug="testing">
+  <div class="layout">
+    <aside class="sidebar">
+      <h1>筋トレ日記アプリ<br>実装計画</h1>
+      <p class="sub">画面別ファイル構成</p>
+      <nav><a href="index.html">概要</a><a href="architecture.html">アーキテクチャ</a><a href="workout.html">今日の記録</a><a href="exercises.html">種目・プリセット</a><a href="menus.html">メニュー管理</a><a href="graphs.html">グラフ</a><a href="history-settings.html">履歴・設定</a><a href="testing.html">テスト・リスク</a></nav>
+    </aside>
+    <main>
+      <div class="hero"><p class="eyebrow">Testing</p><h2>テスト計画とリスク</h2><p>保存、集計、スマホ操作、PWA 動作を中心に検証する。</p></div>
+      <section>
+        <div class="section-head"><h2>1. テスト計画</h2></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>種別</th><th>対象</th><th>確認内容</th></tr></thead>
+            <tbody>
+              <tr><td>単体</td><td>validation, rules, graphAggregation</td><td>入力範囲、セット追加、日別最大重量、期間フィルタ。</td></tr>
+              <tr><td>Repository</td><td>Dexie repository</td><td>upsert、transaction、cascade delete、プリセット重複除外。</td></tr>
+              <tr><td>コンポーネント</td><td>今日の記録、種目選択、グラフ</td><td>空状態、保存中、保存失敗、タブ切替、点詳細。</td></tr>
+              <tr><td>E2E</td><td>主要ユーザーフロー</td><td>プリセット追加、記録保存、メニュー追加、グラフ表示、再読み込み保持。</td></tr>
+              <tr><td>PWA</td><td>Service Worker, IndexedDB</td><td>オフライン起動、保存継続、再起動後のデータ保持。</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+      <section>
+        <div class="section-head"><h2>2. E2E シナリオ</h2></div>
+        <ol>
+          <li>プリセットからベンチプレスをマイ種目へ追加し、今日の記録へ追加する。</li>
+          <li>重量と回数を3セット入力し、再読み込み後も残っていることを確認する。</li>
+          <li>同じ種目をもう一度追加し、カードではなくセットが増えることを確認する。</li>
+          <li>メニューを作成し、今日の記録へまとめて追加する。</li>
+          <li>重量推移グラフで同日最大重量だけが表示されることを確認する。</li>
+          <li>体重を入力し、体重推移グラフと日別履歴へ反映されることを確認する。</li>
+        </ol>
+      </section>
+      <section>
+        <div class="section-head"><h2>3. リスクと対策</h2></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>リスク</th><th>影響</th><th>対策</th></tr></thead>
+            <tbody>
+              <tr><td>IndexedDB 操作の複雑化</td><td>保存漏れ、部分更新、削除漏れが起きる。</td><td>Repository と transaction を徹底し、Repository 単体テストを厚めにする。</td></tr>
+              <tr><td>自動保存の競合</td><td>古い保存結果が新しい入力を上書きする。</td><td>保存リクエストに revision を持たせ、最新 revision だけ状態反映する。</td></tr>
+              <tr><td>スマホ画面の情報過多</td><td>入力が重く感じる。</td><td>主要操作は今日の記録に集約し、詳細編集はシート化する。</td></tr>
+              <tr><td>将来同期への移行</td><td>ローカル専用設計が足かせになる。</td><td>Repository 経由、UUID、ISO string、エンティティ分離を守る。</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+      <section class="review-panel">
+        <h3>レビュー指摘Markdown生成</h3>
+        <div class="review-source" data-review-title="1. テスト計画"><label>1. テスト計画</label><textarea placeholder="指摘を入力"></textarea></div>
+        <div class="review-source" data-review-title="2. E2E シナリオ"><label>2. E2E シナリオ</label><textarea placeholder="指摘を入力"></textarea></div>
+        <div class="review-source" data-review-title="3. リスクと対策"><label>3. リスクと対策</label><textarea placeholder="指摘を入力"></textarea></div>
+        <div class="button-row"><button class="small-btn" type="button" id="copyPromptBtn">Markdownをコピー</button><button class="small-btn" type="button" id="downloadPromptBtn">Markdownファイルを生成</button><button class="small-btn" type="button" id="clearPromptBtn">入力をクリア</button></div>
+        <textarea class="prompt-output" id="promptOutput" readonly></textarea>
+      </section>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="assets/common.js"></script><script src="assets/review.js"></script>
+</body>
+</html>

@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>種目・プリセット - 筋トレ日記アプリ 実装計画</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body data-page-title="種目・プリセット画面" data-page-slug="exercises">
+  <div class="layout">
+    <aside class="sidebar">
+      <h1>筋トレ日記アプリ<br>実装計画</h1>
+      <p class="sub">画面別ファイル構成</p>
+      <nav><a href="index.html">概要</a><a href="architecture.html">アーキテクチャ</a><a href="workout.html">今日の記録</a><a href="exercises.html">種目・プリセット</a><a href="menus.html">メニュー管理</a><a href="graphs.html">グラフ</a><a href="history-settings.html">履歴・設定</a><a href="testing.html">テスト・リスク</a></nav>
+    </aside>
+    <main>
+      <div class="hero"><p class="eyebrow">Exercises</p><h2>種目・プリセット画面</h2><p>マイ種目の作成、編集、非表示、プリセットからの複数追加を扱う。</p></div>
+      <section>
+        <div class="section-head"><h2>1. UIモックアップ</h2></div>
+        <div class="mockup-grid">
+          <div class="phone"><div class="phone-screen">
+            <div class="phone-header"><button class="icon-btn">×</button><div><div class="label">シート</div><div class="title">種目を追加</div></div><button class="icon-btn">＋</button></div>
+            <div class="phone-body">
+              <div class="fake-input">検索: ベンチ</div>
+              <ul class="tag-list"><li class="tag">すべて</li><li class="tag secondary">胸</li><li class="tag secondary">背中</li><li class="tag secondary">脚</li></ul>
+              <div class="sheet-item"><strong>ベンチプレス</strong><span>最近使った・胸</span></div>
+              <div style="height:8px"></div>
+              <div class="sheet-item"><strong>インクラインダンベルプレス</strong><span>胸・ダンベル</span></div>
+              <div style="height:8px"></div>
+              <div class="sheet-item"><strong>チェストプレス</strong><span>胸・マシン</span></div>
+              <div class="primary-action"><span class="pill">プリセットから追加</span></div>
+            </div>
+          </div></div>
+          <div>
+            <h3>実装ポイント</h3>
+            <ul>
+              <li>プリセットは直接今日の記録へ出さず、マイ種目化してから選択対象にする。</li>
+              <li>追加済みプリセットは `Exercise.sourcePresetId` で判定し、再追加不可にする。</li>
+              <li>マイ種目の削除は物理削除ではなく `isActive: false`。</li>
+              <li>最近使った種目は `WorkoutExercise.createdAt` から派生算出する。</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+      <section>
+        <div class="section-head"><h2>2. データフロー</h2></div>
+        <div class="flow-row">
+          <div class="flow-node"><strong>ExercisePreset</strong><span>標準種目を検索、部位で絞り込み。</span></div>
+          <div class="flow-node"><strong>複数選択</strong><span>追加済みは選択不可。</span></div>
+          <div class="flow-node"><strong>Exercise作成</strong><span>sourcePresetId を保持。</span></div>
+          <div class="flow-node"><strong>種目選択</strong><span>マイ種目として今日の記録へ追加可能。</span></div>
+        </div>
+      </section>
+      <section>
+        <div class="section-head"><h2>3. 重要コード</h2></div>
+        <pre><code class="language-ts">export async function addFromPresets(presetIds: UUID[]) {
+  return db.transaction('rw', db.exercisePresets, db.exercises, async () =&gt; {
+    const existing = await db.exercises
+      .where('sourcePresetId')
+      .anyOf(presetIds)
+      .toArray();
+    const existingIds = new Set(existing.map((exercise) =&gt; exercise.sourcePresetId));
+    const presets = await db.exercisePresets.where('id').anyOf(presetIds).toArray();
+
+    const nextSortOrder = await getNextExerciseSortOrder();
+    const exercises = presets
+      .filter((preset) =&gt; !existingIds.has(preset.id))
+      .map((preset, index) =&gt; createExerciseFromPreset(preset, nextSortOrder + index * 10));
+
+    await db.exercises.bulkAdd(exercises);
+    return exercises;
+  });
+}</code></pre>
+      </section>
+      <section class="review-panel">
+        <h3>レビュー指摘Markdown生成</h3>
+        <div class="review-source" data-review-title="1. UIモックアップ"><label>1. UIモックアップ</label><textarea placeholder="指摘を入力"></textarea></div>
+        <div class="review-source" data-review-title="2. データフロー"><label>2. データフロー</label><textarea placeholder="指摘を入力"></textarea></div>
+        <div class="review-source" data-review-title="3. 重要コード"><label>3. 重要コード</label><textarea placeholder="指摘を入力"></textarea></div>
+        <div class="button-row"><button class="small-btn" type="button" id="copyPromptBtn">Markdownをコピー</button><button class="small-btn" type="button" id="downloadPromptBtn">Markdownファイルを生成</button><button class="small-btn" type="button" id="clearPromptBtn">入力をクリア</button></div>
+        <textarea class="prompt-output" id="promptOutput" readonly></textarea>
+      </section>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="assets/common.js"></script><script src="assets/review.js"></script>
+</body>
+</html>

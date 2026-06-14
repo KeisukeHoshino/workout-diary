@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>履歴・設定 - 筋トレ日記アプリ 実装計画</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body data-page-title="履歴・設定画面" data-page-slug="history-settings">
+  <div class="layout">
+    <aside class="sidebar">
+      <h1>筋トレ日記アプリ<br>実装計画</h1>
+      <p class="sub">画面別ファイル構成</p>
+      <nav><a href="index.html">概要</a><a href="architecture.html">アーキテクチャ</a><a href="workout.html">今日の記録</a><a href="exercises.html">種目・プリセット</a><a href="menus.html">メニュー管理</a><a href="graphs.html">グラフ</a><a href="history-settings.html">履歴・設定</a><a href="testing.html">テスト・リスク</a></nav>
+    </aside>
+    <main>
+      <div class="hero"><p class="eyebrow">History / Settings</p><h2>履歴・設定画面</h2><p>日別履歴、過去記録編集、設定、データ初期化を扱う。</p></div>
+      <section>
+        <div class="section-head"><h2>1. 履歴画面</h2></div>
+        <div class="mockup-grid">
+          <div class="phone"><div class="phone-screen">
+            <div class="phone-header"><button class="icon-btn">‹</button><div><div class="label">履歴</div><div class="title">最近の記録</div></div><button class="icon-btn">⌕</button></div>
+            <div class="phone-body">
+              <div class="history-item"><strong>2026-06-14</strong><span>体重 68.4kg / 2種目 / 6セット</span></div>
+              <div style="height:8px"></div>
+              <div class="history-item"><strong>2026-06-12</strong><span>背中の日 / 3種目 / 9セット</span></div>
+              <div style="height:8px"></div>
+              <div class="history-item"><strong>2026-06-10</strong><span>脚の日 / 4種目 / 12セット</span></div>
+            </div>
+            <div class="tabbar"><span>記録</span><span>グラフ</span><span class="active">履歴</span><span>管理</span></div>
+          </div></div>
+          <div>
+            <h3>履歴の仕様</h3>
+            <ul>
+              <li>日付降順に表示する。</li>
+              <li>日付、体重、種目数、総セット数、主な種目名を表示する。</li>
+              <li>カードタップで `/?date=YYYY-MM-DD` へ遷移して編集する。</li>
+              <li>日別記録削除時も体重記録は独立データとして残す。</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+      <section>
+        <div class="section-head"><h2>2. 設定画面</h2></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>項目</th><th>仕様</th></tr></thead>
+            <tbody>
+              <tr><td>単位</td><td>MVP は kg 固定表示。</td></tr>
+              <tr><td>グラフ初期期間</td><td>`defaultGraphRange` を変更可能。初期値は `3m`。</td></tr>
+              <tr><td>データ初期化</td><td>確認を2段階にして IndexedDB データを削除。</td></tr>
+              <tr><td>エクスポート</td><td>MVP 後機能として非表示または無効表示。</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+      <section>
+        <div class="section-head"><h2>3. 削除ルール</h2></div>
+        <ul>
+          <li>セット削除: 対象セットのみ削除し、残りの `setNumber` を振り直す。</li>
+          <li>種目カード削除: `WorkoutExercise` と配下 `WorkoutSet` を削除する。</li>
+          <li>日別記録削除: `WorkoutDay` と配下記録を削除する。体重は残す。</li>
+          <li>データ初期化: IndexedDB 全ストアをクリアし、初期設定とプリセットを再投入する。</li>
+        </ul>
+      </section>
+      <section class="review-panel">
+        <h3>レビュー指摘Markdown生成</h3>
+        <div class="review-source" data-review-title="1. 履歴画面"><label>1. 履歴画面</label><textarea placeholder="指摘を入力"></textarea></div>
+        <div class="review-source" data-review-title="2. 設定画面"><label>2. 設定画面</label><textarea placeholder="指摘を入力"></textarea></div>
+        <div class="review-source" data-review-title="3. 削除ルール"><label>3. 削除ルール</label><textarea placeholder="指摘を入力"></textarea></div>
+        <div class="button-row"><button class="small-btn" type="button" id="copyPromptBtn">Markdownをコピー</button><button class="small-btn" type="button" id="downloadPromptBtn">Markdownファイルを生成</button><button class="small-btn" type="button" id="clearPromptBtn">入力をクリア</button></div>
+        <textarea class="prompt-output" id="promptOutput" readonly></textarea>
+      </section>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="assets/common.js"></script><script src="assets/review.js"></script>
+</body>
+</html>

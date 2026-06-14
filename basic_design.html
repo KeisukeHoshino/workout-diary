@@ -1,0 +1,1187 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>筋トレ日記アプリ 基本設計書</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f7f9;
+      --paper: #ffffff;
+      --ink: #17202a;
+      --muted: #657282;
+      --line: #d9dee6;
+      --soft: #eef2f6;
+      --accent: #16776f;
+      --accent-2: #c4512d;
+      --accent-3: #345995;
+      --ok: #1d7f45;
+      --warn: #ab6a00;
+      --shadow: 0 12px 32px rgba(23, 32, 42, 0.08);
+      --radius: 8px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      line-height: 1.7;
+      letter-spacing: 0;
+    }
+
+    a {
+      color: var(--accent-3);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    code {
+      padding: 2px 5px;
+      border-radius: 5px;
+      background: #eef2f6;
+      color: #243447;
+      font-family: var(--mono);
+      font-size: 0.92em;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: auto;
+      padding: 28px 20px;
+      background: #17202a;
+      color: #f7f8fa;
+    }
+
+    .sidebar h1 {
+      margin: 0 0 8px;
+      font-size: 22px;
+      line-height: 1.35;
+    }
+
+    .sidebar .sub {
+      margin: 0 0 22px;
+      color: #cbd2db;
+      font-size: 13px;
+    }
+
+    .sidebar nav {
+      display: grid;
+      gap: 2px;
+    }
+
+    .sidebar a {
+      display: block;
+      padding: 8px 10px;
+      border-radius: 6px;
+      color: #f7f8fa;
+      font-size: 14px;
+    }
+
+    .sidebar a:hover {
+      background: rgba(255, 255, 255, 0.1);
+      text-decoration: none;
+    }
+
+    main {
+      min-width: 0;
+      padding: 44px min(5vw, 64px) 72px;
+    }
+
+    .hero,
+    section {
+      max-width: 1160px;
+      margin: 0 auto 24px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--paper);
+    }
+
+    .hero {
+      padding: 34px;
+      box-shadow: var(--shadow);
+    }
+
+    section {
+      padding: 28px;
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    h2,
+    h3,
+    h4 {
+      line-height: 1.35;
+    }
+
+    .hero h2 {
+      margin: 0 0 14px;
+      font-size: clamp(28px, 4vw, 44px);
+    }
+
+    .hero p {
+      max-width: 900px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 16px;
+    }
+
+    section > h2 {
+      margin: 0 0 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--line);
+      font-size: 26px;
+    }
+
+    h3 {
+      margin: 26px 0 10px;
+      font-size: 20px;
+    }
+
+    h4 {
+      margin: 18px 0 8px;
+      font-size: 16px;
+    }
+
+    p {
+      margin: 10px 0;
+    }
+
+    ul {
+      padding-left: 1.35rem;
+    }
+
+    li + li {
+      margin-top: 4px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fbfcfd;
+    }
+
+    .card h3,
+    .card h4 {
+      margin-top: 0;
+    }
+
+    .tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 12px 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 4px 10px;
+      border: 1px solid #cbd9d6;
+      border-radius: 999px;
+      background: #eef8f6;
+      color: #0f5b55;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .tag.secondary {
+      border-color: #d9dce6;
+      background: #f0f2f7;
+      color: #465469;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      margin: 14px 0;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+    }
+
+    table {
+      width: 100%;
+      min-width: 660px;
+      border-collapse: collapse;
+      background: #ffffff;
+    }
+
+    th,
+    td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+      font-size: 14px;
+    }
+
+    th {
+      background: #eef2f6;
+      color: #2c3b4d;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .system-map {
+      display: grid;
+      grid-template-columns: minmax(180px, 1fr) 80px minmax(220px, 1.2fr) 80px minmax(180px, 1fr);
+      align-items: center;
+      gap: 10px;
+      margin: 20px 0 4px;
+    }
+
+    .map-box,
+    .flow-node,
+    .store-box {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fbfcfd;
+      padding: 14px;
+    }
+
+    .map-box strong,
+    .flow-node strong,
+    .store-box strong {
+      display: block;
+      margin-bottom: 4px;
+      color: #17202a;
+      font-size: 15px;
+    }
+
+    .map-box span,
+    .flow-node span,
+    .store-box span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .arrow {
+      color: var(--accent-3);
+      font-weight: 900;
+      text-align: center;
+      font-size: 24px;
+    }
+
+    .mockup-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(240px, 1fr));
+      gap: 18px;
+      align-items: start;
+      margin-top: 16px;
+    }
+
+    .phone {
+      overflow: hidden;
+      border: 1px solid #c9d0da;
+      border-radius: 28px;
+      background: #101820;
+      box-shadow: 0 16px 32px rgba(23, 32, 42, 0.16);
+    }
+
+    .phone-screen {
+      min-height: 560px;
+      margin: 10px;
+      border-radius: 20px;
+      background: #f8fafc;
+      overflow: hidden;
+    }
+
+    .phone-header {
+      padding: 16px 16px 12px;
+      border-bottom: 1px solid #e0e5ec;
+      background: #ffffff;
+    }
+
+    .phone-header .label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .phone-header .title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 4px;
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .icon-btn {
+      display: inline-grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      border: 1px solid #d9dee6;
+      border-radius: 8px;
+      background: #ffffff;
+      color: #2c3b4d;
+      font-weight: 900;
+    }
+
+    .phone-body {
+      display: grid;
+      gap: 12px;
+      padding: 14px;
+    }
+
+    .input-row,
+    .set-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: center;
+      padding: 10px 12px;
+      border: 1px solid #dfe5ec;
+      border-radius: 8px;
+      background: #ffffff;
+      font-size: 14px;
+    }
+
+    .input-row strong,
+    .set-row strong {
+      font-size: 13px;
+    }
+
+    .value {
+      color: #17202a;
+      font-weight: 800;
+    }
+
+    .exercise-card {
+      padding: 12px;
+      border: 1px solid #dfe5ec;
+      border-radius: 8px;
+      background: #ffffff;
+    }
+
+    .exercise-card h4 {
+      margin: 0 0 8px;
+      font-size: 15px;
+    }
+
+    .set-row {
+      grid-template-columns: 44px 1fr 1fr;
+      margin-top: 6px;
+      padding: 8px 10px;
+      font-size: 13px;
+    }
+
+    .primary-btn,
+    .secondary-btn {
+      min-height: 38px;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      font-weight: 800;
+      text-align: center;
+      padding: 8px 12px;
+    }
+
+    .primary-btn {
+      background: var(--accent);
+      color: #ffffff;
+    }
+
+    .secondary-btn {
+      border-color: #cbd2db;
+      background: #ffffff;
+      color: #2c3b4d;
+    }
+
+    .sheet {
+      margin-top: 24px;
+      border-top: 1px solid #dfe5ec;
+      border-radius: 18px 18px 0 0;
+      background: #ffffff;
+      padding: 12px;
+      box-shadow: 0 -8px 24px rgba(23, 32, 42, 0.08);
+    }
+
+    .grabber {
+      width: 42px;
+      height: 4px;
+      margin: 0 auto 12px;
+      border-radius: 999px;
+      background: #cbd2db;
+    }
+
+    .search {
+      padding: 10px 12px;
+      border: 1px solid #d9dee6;
+      border-radius: 8px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .list-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid #edf1f5;
+      font-size: 14px;
+    }
+
+    .list-item:last-child {
+      border-bottom: 0;
+    }
+
+    .chart {
+      height: 180px;
+      border: 1px solid #dfe5ec;
+      border-radius: 8px;
+      background:
+        linear-gradient(to top, #e9edf3 1px, transparent 1px) 0 0 / 100% 45px,
+        linear-gradient(to right, #e9edf3 1px, transparent 1px) 0 0 / 25% 100%,
+        #ffffff;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .chart svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .flow-stack {
+      display: grid;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .flow-row {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(140px, 1fr));
+      gap: 10px;
+      align-items: stretch;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .flow-node {
+      min-width: 140px;
+      position: relative;
+    }
+
+    .flow-node:not(:last-child)::after {
+      content: "→";
+      position: absolute;
+      top: 50%;
+      right: -13px;
+      transform: translateY(-50%);
+      color: var(--accent-3);
+      font-weight: 900;
+    }
+
+    .erd {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(220px, 1fr));
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .store-box {
+      background: #ffffff;
+    }
+
+    .store-box ul {
+      margin: 8px 0 0;
+      padding-left: 18px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .callout {
+      margin-top: 14px;
+      padding: 14px 16px;
+      border-left: 4px solid var(--accent);
+      border-radius: 8px;
+      background: #eef8f6;
+      color: #244b47;
+    }
+
+    @media (max-width: 980px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: static;
+        height: auto;
+      }
+
+      .sidebar nav {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      main {
+        padding: 24px 16px 48px;
+      }
+
+      .grid,
+      .grid-3,
+      .mockup-grid,
+      .erd {
+        grid-template-columns: 1fr;
+      }
+
+      .system-map {
+        grid-template-columns: 1fr;
+      }
+
+      .arrow {
+        transform: rotate(90deg);
+      }
+
+      .flow-row {
+        grid-template-columns: 1fr;
+      }
+
+      .flow-node:not(:last-child)::after {
+        content: "↓";
+        top: auto;
+        right: 50%;
+        bottom: -18px;
+        transform: translateX(50%);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <h1>筋トレ日記アプリ<br>基本設計書</h1>
+      <p class="sub">Web/PWA MVP・IndexedDB 端末内保存</p>
+      <nav>
+        <a href="#overview">1. 概要</a>
+        <a href="#system">2. システム構成</a>
+        <a href="#screens">3. 画面構成</a>
+        <a href="#mockups">4. UIモックアップ</a>
+        <a href="#features">5. 機能設計</a>
+        <a href="#data-model">6. データモデル</a>
+        <a href="#storage">7. データ保存</a>
+        <a href="#flows">8. データフロー</a>
+        <a href="#rules">9. 業務ルール</a>
+        <a href="#quality">10. 非機能設計</a>
+        <a href="#acceptance">11. 受け入れ基準</a>
+        <a href="#next">12. 次工程</a>
+      </nav>
+    </aside>
+
+    <main>
+      <header class="hero">
+        <p class="eyebrow">Basic Design</p>
+        <h2>筋トレ日記アプリ 基本設計書</h2>
+        <p>
+          要件定義書をもとに、Web/PWA 前提の画面構成、データモデル、IndexedDB 保存方針、主要なデータフローを整理する。
+          本書は概念設計を中心とし、後続の詳細設計・実装設計へつなげるための土台とする。
+        </p>
+      </header>
+
+      <section id="overview">
+        <h2>1. 概要</h2>
+        <div class="grid">
+          <div class="card">
+            <h3>目的</h3>
+            <p>日々の筋トレ内容と体重をスマホで素早く記録し、種目ごとの最大重量推移と体重推移を確認できるようにする。</p>
+          </div>
+          <div class="card">
+            <h3>MVP範囲</h3>
+            <p>今日の記録、日付ごとの筋トレ記録、体重記録、マイ種目管理、プリセット追加、メニューテンプレート、グラフ、端末内保存を対象とする。</p>
+          </div>
+        </div>
+
+        <h3>主要価値</h3>
+        <ul class="tag-list">
+          <li class="tag">今日の記録を迷わず残せる</li>
+          <li class="tag">種目やメニューを事前準備できる</li>
+          <li class="tag">記録結果がグラフで返ってくる</li>
+          <li class="tag secondary">ログインなし</li>
+          <li class="tag secondary">クラウド同期なし</li>
+          <li class="tag secondary">CSVエクスポートなし</li>
+        </ul>
+      </section>
+
+      <section id="system">
+        <h2>2. システム構成</h2>
+        <p>MVP は Web/PWA として構成する。スマホでの片手操作を主対象とし、デスクトップ表示は補助的に扱う。</p>
+        <div class="system-map" aria-label="システム構成図">
+          <div class="map-box">
+            <strong>ユーザー</strong>
+            <span>スマホ中心に記録・確認する</span>
+          </div>
+          <div class="arrow">→</div>
+          <div class="map-box">
+            <strong>Web/PWA アプリ</strong>
+            <span>画面、入力、自動保存、集計、グラフ表示</span>
+          </div>
+          <div class="arrow">→</div>
+          <div class="map-box">
+            <strong>IndexedDB</strong>
+            <span>端末内に設定・種目・記録・メニューを保存</span>
+          </div>
+        </div>
+        <div class="callout">
+          保存データはエンティティごとに分離する。最大重量や期間内変化量などの派生値は保存せず、表示時に保存済みデータから集計する。
+        </div>
+      </section>
+
+      <section id="screens">
+        <h2>3. 画面構成</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>画面</th>
+                <th>役割</th>
+                <th>主な操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>今日の記録</td>
+                <td>当日または選択日の体重・筋トレ記録を入力する。</td>
+                <td>体重入力、種目追加、メニュー追加、セット追加、重量・回数編集。</td>
+              </tr>
+              <tr>
+                <td>種目選択シート</td>
+                <td>マイ種目から今日の記録に追加する種目を選ぶ。</td>
+                <td>検索、部位絞り込み、最近使った種目選択、新規作成、プリセット導線。</td>
+              </tr>
+              <tr>
+                <td>プリセット選択</td>
+                <td>アプリ標準のプリセット種目からマイ種目を作る。</td>
+                <td>検索、部位絞り込み、複数選択、マイ種目へ追加。</td>
+              </tr>
+              <tr>
+                <td>メニュー管理</td>
+                <td>1回分の筋トレメニューを作成・編集する。</td>
+                <td>メニュー作成、種目追加、並び替え、編集、削除。</td>
+              </tr>
+              <tr>
+                <td>グラフ</td>
+                <td>最大重量推移と体重推移を確認する。</td>
+                <td>タブ切替、種目選択、期間変更、データ点詳細表示。</td>
+              </tr>
+              <tr>
+                <td>日別履歴・設定</td>
+                <td>過去記録の確認とアプリ全体の設定を行う。</td>
+                <td>日付選択、記録確認、単位確認、データ管理。</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="mockups">
+        <h2>4. UIモックアップ</h2>
+        <p>主要操作を理解しやすいよう、MVP の中心になる3画面を簡易モックアップとして示す。</p>
+        <div class="mockup-grid">
+          <div class="phone" aria-label="今日の記録画面モックアップ">
+            <div class="phone-screen">
+              <div class="phone-header">
+                <div class="label">今日の記録</div>
+                <div class="title"><span>2026/06/13</span><span class="icon-btn">＋</span></div>
+              </div>
+              <div class="phone-body">
+                <div class="input-row"><strong>体重</strong><span class="value">68.4 kg</span></div>
+                <div class="exercise-card">
+                  <h4>ベンチプレス</h4>
+                  <div class="set-row"><strong>1</strong><span>60.0 kg</span><span>10 回</span></div>
+                  <div class="set-row"><strong>2</strong><span>65.0 kg</span><span>8 回</span></div>
+                  <div class="set-row"><strong>3</strong><span>65.0 kg</span><span>7 回</span></div>
+                  <div class="secondary-btn">＋ セット</div>
+                </div>
+                <div class="exercise-card">
+                  <h4>ダンベルプレス</h4>
+                  <div class="set-row"><strong>1</strong><span>- kg</span><span>- 回</span></div>
+                </div>
+                <div class="primary-btn">種目を追加</div>
+                <div class="secondary-btn">メニューから追加</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="phone" aria-label="種目選択シートモックアップ">
+            <div class="phone-screen">
+              <div class="phone-header">
+                <div class="label">今日の記録</div>
+                <div class="title"><span>種目を追加</span><span class="icon-btn">×</span></div>
+              </div>
+              <div class="phone-body">
+                <div class="sheet">
+                  <div class="grabber"></div>
+                  <div class="search">種目名で検索</div>
+                  <ul class="tag-list">
+                    <li class="tag">胸</li>
+                    <li class="tag secondary">背中</li>
+                    <li class="tag secondary">脚</li>
+                    <li class="tag secondary">肩</li>
+                  </ul>
+                  <div class="list-item"><span>ベンチプレス</span><span class="icon-btn">＋</span></div>
+                  <div class="list-item"><span>ダンベルプレス</span><span class="icon-btn">＋</span></div>
+                  <div class="list-item"><span>チェストフライ</span><span class="icon-btn">＋</span></div>
+                  <div class="secondary-btn">プリセットから追加</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="phone" aria-label="グラフ画面モックアップ">
+            <div class="phone-screen">
+              <div class="phone-header">
+                <div class="label">グラフ</div>
+                <div class="title"><span>重量推移</span><span class="icon-btn">↔</span></div>
+              </div>
+              <div class="phone-body">
+                <ul class="tag-list">
+                  <li class="tag">重量</li>
+                  <li class="tag secondary">体重</li>
+                  <li class="tag secondary">3か月</li>
+                </ul>
+                <div class="input-row"><strong>種目</strong><span class="value">ベンチプレス</span></div>
+                <div class="chart">
+                  <svg viewBox="0 0 320 180" role="img" aria-label="最大重量推移">
+                    <polyline points="20,140 80,128 140,110 200,92 260,78 300,64" fill="none" stroke="#16776f" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></polyline>
+                    <circle cx="20" cy="140" r="5" fill="#16776f"></circle>
+                    <circle cx="80" cy="128" r="5" fill="#16776f"></circle>
+                    <circle cx="140" cy="110" r="5" fill="#16776f"></circle>
+                    <circle cx="200" cy="92" r="5" fill="#16776f"></circle>
+                    <circle cx="260" cy="78" r="5" fill="#16776f"></circle>
+                    <circle cx="300" cy="64" r="5" fill="#16776f"></circle>
+                  </svg>
+                </div>
+                <div class="grid">
+                  <div class="card"><strong>最新</strong><br>72.5 kg</div>
+                  <div class="card"><strong>期間変化</strong><br>+12.5 kg</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="features">
+        <h2>5. 機能設計</h2>
+        <div class="grid">
+          <div class="card">
+            <h3>今日の記録</h3>
+            <ul>
+              <li>初期表示は当日の日付とする。</li>
+              <li>日付ごとに体重と複数の種目カードを入力できる。</li>
+              <li>各種目カードには複数セットを追加できる。</li>
+              <li>入力内容は自動保存する。</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>種目管理・プリセット</h3>
+            <ul>
+              <li>マイ種目を自由に追加・編集できる。</li>
+              <li>使わない種目は削除ではなく非表示にする。</li>
+              <li>プリセットから複数種目を選択してマイ種目へ追加できる。</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>メニューテンプレート</h3>
+            <ul>
+              <li>1回分の筋トレメニューを作成できる。</li>
+              <li>メニュー内の種目は並び替えできる。</li>
+              <li>今日の記録へ複数種目をまとめて追加できる。</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>グラフ</h3>
+            <ul>
+              <li>重量推移と体重推移をタブで切り替える。</li>
+              <li>期間は1か月、3か月、6か月、全期間から選べる。</li>
+              <li>初期期間は3か月とする。</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section id="data-model">
+        <h2>6. データモデル</h2>
+        <h3>共通方針</h3>
+        <ul class="tag-list">
+          <li class="tag">ID は UUID 文字列</li>
+          <li class="tag">日付は YYYY-MM-DD</li>
+          <li class="tag">日時は ISO 8601</li>
+          <li class="tag">重量・体重は kg</li>
+          <li class="tag">空セットは null 保持</li>
+        </ul>
+
+        <h3>主要エンティティ</h3>
+        <div class="erd" aria-label="データモデル図">
+          <div class="store-box">
+            <strong>UserSettings</strong>
+            <span>端末内に保存する設定</span>
+            <ul>
+              <li>weightUnit</li>
+              <li>defaultGraphRange</li>
+              <li>isSetupCompleted</li>
+            </ul>
+          </div>
+          <div class="store-box">
+            <strong>ExercisePreset</strong>
+            <span>アプリ標準の種目候補</span>
+            <ul>
+              <li>name</li>
+              <li>bodyPart</li>
+              <li>equipmentType</li>
+            </ul>
+          </div>
+          <div class="store-box">
+            <strong>Exercise</strong>
+            <span>ユーザーのマイ種目</span>
+            <ul>
+              <li>sourcePresetId</li>
+              <li>isActive</li>
+              <li>sortOrder</li>
+            </ul>
+          </div>
+          <div class="store-box">
+            <strong>WorkoutDay</strong>
+            <span>日付単位の記録</span>
+            <ul>
+              <li>date</li>
+              <li>memo</li>
+            </ul>
+          </div>
+          <div class="store-box">
+            <strong>WorkoutExercise</strong>
+            <span>特定日の種目カード</span>
+            <ul>
+              <li>workoutDayId</li>
+              <li>exerciseId</li>
+              <li>sortOrder</li>
+            </ul>
+          </div>
+          <div class="store-box">
+            <strong>WorkoutSet</strong>
+            <span>種目カード内の1セット</span>
+            <ul>
+              <li>workoutExerciseId</li>
+              <li>weightKg</li>
+              <li>reps</li>
+            </ul>
+          </div>
+          <div class="store-box">
+            <strong>BodyWeightLog</strong>
+            <span>日付ごとの体重</span>
+            <ul>
+              <li>date</li>
+              <li>bodyWeightKg</li>
+            </ul>
+          </div>
+          <div class="store-box">
+            <strong>MenuTemplate</strong>
+            <span>メニューのひな形</span>
+            <ul>
+              <li>name</li>
+              <li>memo</li>
+              <li>sortOrder</li>
+            </ul>
+          </div>
+          <div class="store-box">
+            <strong>MenuTemplateExercise</strong>
+            <span>メニューに含まれる種目</span>
+            <ul>
+              <li>menuTemplateId</li>
+              <li>exerciseId</li>
+              <li>sortOrder</li>
+            </ul>
+          </div>
+        </div>
+
+        <h3>属性一覧</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>エンティティ</th>
+                <th>主な属性</th>
+                <th>説明</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>UserSettings</td>
+                <td><code>id</code>, <code>weightUnit</code>, <code>defaultGraphRange</code>, <code>isSetupCompleted</code>, <code>createdAt</code>, <code>updatedAt</code></td>
+                <td>端末内に保存するユーザー設定。</td>
+              </tr>
+              <tr>
+                <td>ExercisePreset</td>
+                <td><code>id</code>, <code>name</code>, <code>bodyPart</code>, <code>equipmentType</code>, <code>sortOrder</code></td>
+                <td>アプリ標準の種目候補。ユーザー編集対象ではない。</td>
+              </tr>
+              <tr>
+                <td>Exercise</td>
+                <td><code>id</code>, <code>name</code>, <code>bodyPart</code>, <code>equipmentType</code>, <code>sortOrder</code>, <code>isActive</code>, <code>sourcePresetId</code></td>
+                <td>ユーザーが利用するマイ種目。</td>
+              </tr>
+              <tr>
+                <td>WorkoutDay</td>
+                <td><code>id</code>, <code>date</code>, <code>memo</code>, <code>createdAt</code>, <code>updatedAt</code></td>
+                <td>日付単位の筋トレ記録のまとまり。</td>
+              </tr>
+              <tr>
+                <td>WorkoutExercise</td>
+                <td><code>id</code>, <code>workoutDayId</code>, <code>exerciseId</code>, <code>sortOrder</code>, <code>memo</code></td>
+                <td>特定日の特定種目カード。</td>
+              </tr>
+              <tr>
+                <td>WorkoutSet</td>
+                <td><code>id</code>, <code>workoutExerciseId</code>, <code>setNumber</code>, <code>weightKg</code>, <code>reps</code></td>
+                <td>種目カード内の1セット。未入力は null で保持する。</td>
+              </tr>
+              <tr>
+                <td>BodyWeightLog</td>
+                <td><code>id</code>, <code>date</code>, <code>bodyWeightKg</code>, <code>memo</code></td>
+                <td>筋トレ記録とは独立した日付ごとの体重記録。</td>
+              </tr>
+              <tr>
+                <td>MenuTemplate</td>
+                <td><code>id</code>, <code>name</code>, <code>memo</code>, <code>sortOrder</code></td>
+                <td>1回分の筋トレメニューのひな形。</td>
+              </tr>
+              <tr>
+                <td>MenuTemplateExercise</td>
+                <td><code>id</code>, <code>menuTemplateId</code>, <code>exerciseId</code>, <code>sortOrder</code></td>
+                <td>メニューに含まれる種目。</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="storage">
+        <h2>7. データ保存設計</h2>
+        <p>IndexedDB には、エンティティごとに独立したオブジェクトストアを用意する。</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>オブジェクトストア</th>
+                <th>主なキー</th>
+                <th>主なインデックス</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>userSettings</td><td>id</td><td>なし</td></tr>
+              <tr><td>exercisePresets</td><td>id</td><td>bodyPart, name</td></tr>
+              <tr><td>exercises</td><td>id</td><td>bodyPart, isActive, sourcePresetId</td></tr>
+              <tr><td>workoutDays</td><td>id</td><td>date</td></tr>
+              <tr><td>workoutExercises</td><td>id</td><td>workoutDayId, exerciseId</td></tr>
+              <tr><td>workoutSets</td><td>id</td><td>workoutExerciseId</td></tr>
+              <tr><td>bodyWeightLogs</td><td>id</td><td>date</td></tr>
+              <tr><td>menuTemplates</td><td>id</td><td>sortOrder</td></tr>
+              <tr><td>menuTemplateExercises</td><td>id</td><td>menuTemplateId, exerciseId</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="flows">
+        <h2>8. データフロー</h2>
+        <h3>種目プリセットから今日の記録まで</h3>
+        <div class="flow-row" aria-label="種目追加フロー">
+          <div class="flow-node"><strong>ExercisePreset</strong><span>標準種目を検索・絞り込み</span></div>
+          <div class="flow-node"><strong>マイ種目へ追加</strong><span>複数選択して Exercise を作成</span></div>
+          <div class="flow-node"><strong>Exercise</strong><span>種目選択シートへ表示</span></div>
+          <div class="flow-node"><strong>WorkoutExercise</strong><span>今日の種目カードを作成</span></div>
+          <div class="flow-node"><strong>WorkoutSet</strong><span>空の1セット目を作成</span></div>
+        </div>
+
+        <h3>今日の記録入力</h3>
+        <div class="flow-row" aria-label="今日の記録入力フロー">
+          <div class="flow-node"><strong>日付選択</strong><span>当日・前日・翌日・カレンダー</span></div>
+          <div class="flow-node"><strong>BodyWeightLog</strong><span>体重を日付単位で保存</span></div>
+          <div class="flow-node"><strong>種目/メニュー追加</strong><span>Exercise または MenuTemplate を選択</span></div>
+          <div class="flow-node"><strong>WorkoutSet</strong><span>重量・回数を入力</span></div>
+          <div class="flow-node"><strong>IndexedDB</strong><span>入力変更時に自動保存</span></div>
+        </div>
+
+        <h3>メニューから今日の記録への展開</h3>
+        <div class="flow-row" aria-label="メニュー展開フロー">
+          <div class="flow-node"><strong>MenuTemplate</strong><span>胸の日・脚の日など</span></div>
+          <div class="flow-node"><strong>MenuTemplateExercise</strong><span>登録済み種目を表示順で取得</span></div>
+          <div class="flow-node"><strong>WorkoutExercise</strong><span>今日の種目カードを生成</span></div>
+          <div class="flow-node"><strong>WorkoutSet</strong><span>空の1セット目を生成</span></div>
+          <div class="flow-node"><strong>自動保存</strong><span>生成結果を IndexedDB に保存</span></div>
+        </div>
+
+        <h3>グラフ生成</h3>
+        <div class="flow-stack">
+          <div class="flow-row" aria-label="重量推移グラフ生成フロー">
+            <div class="flow-node"><strong>WorkoutSet</strong><span>重量・回数</span></div>
+            <div class="flow-node"><strong>日付と種目で集計</strong><span>同日最大重量</span></div>
+            <div class="flow-node"><strong>期間で絞り込み</strong><span>初期3か月</span></div>
+            <div class="flow-node"><strong>重量推移グラフ</strong><span>折れ線表示</span></div>
+            <div class="flow-node"><strong>詳細表示</strong><span>データ点タップ</span></div>
+          </div>
+          <div class="flow-row" aria-label="体重推移グラフ生成フロー">
+            <div class="flow-node"><strong>BodyWeightLog</strong><span>日付・体重</span></div>
+            <div class="flow-node"><strong>日付順に整列</strong><span>記録日単位</span></div>
+            <div class="flow-node"><strong>期間で絞り込み</strong><span>初期3か月</span></div>
+            <div class="flow-node"><strong>体重推移グラフ</strong><span>折れ線表示</span></div>
+            <div class="flow-node"><strong>サマリー</strong><span>最新・期間変化</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="rules">
+        <h2>9. 業務ルール</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>項目</th>
+                <th>ルール</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>最大重量</td><td>同一日・同一種目の全セットの中で、一番重い重量をその日の最大重量とする。</td></tr>
+              <tr><td>同じ種目の追加</td><td>今日すでに同じ種目がある場合は、新しい種目カードを作らず既存カードに新しいセットを追加する。</td></tr>
+              <tr><td>セット追加</td><td>既存セットがある場合は前セットの重量・回数をコピーする。セットがない場合は空の1セット目を作る。</td></tr>
+              <tr><td>体重記録</td><td>トレーニング記録とは独立して日付ごとに保存する。トレーニングしない日も記録できる。</td></tr>
+              <tr><td>プリセット追加</td><td>プリセットは直接今日の記録へ出さず、マイ種目に追加された後に種目選択シートへ表示する。</td></tr>
+              <tr><td>メニュー追加</td><td>メニューを今日に追加した場合、含まれる種目カードと空の1セット目を生成する。</td></tr>
+              <tr><td>グラフ初期表示</td><td>重量推移・体重推移ともに初期期間は直近3か月とする。</td></tr>
+              <tr><td>単位</td><td>重量と体重は kg を基本とする。</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="quality">
+        <h2>10. 非機能設計</h2>
+        <div class="grid">
+          <div class="card">
+            <h3>ユーザビリティ</h3>
+            <ul>
+              <li>スマホ片手操作を前提とする。</li>
+              <li>日々の入力は画面遷移を少なくする。</li>
+              <li>自動保存を基本にする。</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>パフォーマンス</h3>
+            <ul>
+              <li>今日の記録画面は即時に表示する。</li>
+              <li>検索と絞り込みは入力に追従する。</li>
+              <li>グラフ集計は通常利用の記録量で快適に表示する。</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>データ保護</h3>
+            <ul>
+              <li>MVP では端末内保存とする。</li>
+              <li>削除操作には確認を入れる。</li>
+              <li>将来の同期に備えてデータ構造を分離する。</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>保守性</h3>
+            <ul>
+              <li>プリセット、マイ種目、記録、メニューを別エンティティとして扱う。</li>
+              <li>グラフ用集計は保存データから導出する。</li>
+              <li>推定1RMや総ボリュームを追加しやすい構造にする。</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section id="acceptance">
+        <h2>11. テスト・受け入れ基準</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>番号</th>
+                <th>基準</th>
+                <th>確認観点</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>A-01</td><td>今日の記録画面で体重を入力できる。</td><td>入力後、同じ日付を再表示しても体重が残っている。</td></tr>
+              <tr><td>A-02</td><td>今日の記録画面で種目を追加できる。</td><td>マイ種目から選択した種目カードが日付画面に表示される。</td></tr>
+              <tr><td>A-03</td><td>セット単位で重量・回数を記録できる。</td><td>複数セットが保存され、編集後も保持される。</td></tr>
+              <tr><td>A-04</td><td>プリセットからマイ種目を追加できる。</td><td>追加した種目が種目選択シートに表示される。</td></tr>
+              <tr><td>A-05</td><td>メニューテンプレートから今日の記録へ複数種目を追加できる。</td><td>メニュー内の種目カードが並び順通りに追加され、各種目に空の1セット目がある。</td></tr>
+              <tr><td>A-06</td><td>重量推移グラフで日別最大重量を確認できる。</td><td>同日の複数セットから最大重量だけがグラフに反映される。</td></tr>
+              <tr><td>A-07</td><td>体重推移グラフを確認できる。</td><td>体重記録が日付順に折れ線グラフで表示される。</td></tr>
+              <tr><td>A-08</td><td>グラフの初期期間が直近3か月である。</td><td>重量推移・体重推移ともに初回表示で3か月が選択されている。</td></tr>
+              <tr><td>A-09</td><td>記録は端末内に保存される。</td><td>アプリを閉じて再起動しても保存済みデータが残っている。</td></tr>
+              <tr><td>A-10</td><td>スマホ幅で画面が破綻しない。</td><td>主要画面でテキストやボタンが重ならず、操作可能である。</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="next">
+        <h2>12. 次工程</h2>
+        <ul>
+          <li>画面ごとの状態、操作、エラー、空状態を詳細化する。</li>
+          <li>IndexedDB アクセス層の API を設計する。</li>
+          <li>グラフ集計ロジックを詳細化する。</li>
+          <li>自動保存のタイミングと競合時の扱いを決める。</li>
+          <li>実装技術、ルーティング、状態管理、UI コンポーネント構成を決める。</li>
+        </ul>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
