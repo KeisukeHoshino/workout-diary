@@ -23,6 +23,10 @@ python3 -m http.server 5173
 - 日別履歴の確認と削除
 - PWA manifest と Service Worker
 
+## ドキュメント
+
+要件定義書、基本設計書、詳細設計書、実装計画は `docs/` に配置しています。
+
 ## バージョン管理
 
 このディレクトリは Git リポジトリで、`jj git init` により jujutsu も導入済みです。
