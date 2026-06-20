@@ -1,5 +1,5 @@
-import { Archive, RotateCcw } from 'lucide-react';
-import { FormEvent, useState } from 'react';
+import { Archive, CheckCircle2, RotateCcw } from 'lucide-react';
+import { FormEvent, useEffect, useState } from 'react';
 import { EmptyState } from '../../components/common/EmptyState';
 import { ScreenHeader } from '../../components/common/ScreenHeader';
 import type { BodyPart, EquipmentType } from '../../domain/models';
@@ -11,6 +11,9 @@ import { useAsyncData } from '../shared/useAsyncData';
 
 export function ExercisesPage() {
   const [selectedPresetIds, setSelectedPresetIds] = useState<string[]>([]);
+  const [recentExerciseIds, setRecentExerciseIds] = useState<string[]>([]);
+  const [recentPresetIds, setRecentPresetIds] = useState<string[]>([]);
+  const [feedback, setFeedback] = useState('');
   const { data, isLoading, reload } = useAsyncData(async () => {
     await initializeDatabase();
     const [exercises, presets] = await Promise.all([exerciseRepository.listAll(), exerciseRepository.listPresets()]);
@@ -19,24 +22,42 @@ export function ExercisesPage() {
 
   const addedPresetIds = new Set(data?.exercises.map((exercise) => exercise.sourcePresetId).filter(Boolean));
 
+  useEffect(() => {
+    if (!feedback) return;
+    const timer = window.setTimeout(() => setFeedback(''), 5000);
+    return () => window.clearTimeout(timer);
+  }, [feedback]);
+
   async function createExercise(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const formElement = event.currentTarget;
     const form = new FormData(formElement);
     const name = validateName(String(form.get('name') ?? ''));
-    if (!name) return;
-    await exerciseRepository.create({
+    if (!name) {
+      setFeedback('種目名は 1 から 40 文字で入力してください。');
+      return;
+    }
+    const exercise = await exerciseRepository.create({
       name,
       bodyPart: form.get('bodyPart') as BodyPart,
       equipmentType: (form.get('equipmentType') || null) as EquipmentType | null
     });
     formElement.reset();
+    setRecentExerciseIds([exercise.id]);
+    setRecentPresetIds([]);
+    setFeedback(`${exercise.name} をマイ種目に追加しました。`);
     reload();
   }
 
   return (
     <>
       <ScreenHeader title="マイ種目" description="よく使う種目を管理します。" />
+      {feedback ? (
+        <div className="notice" role="status">
+          <CheckCircle2 size={18} aria-hidden="true" />
+          <span>{feedback}</span>
+        </div>
+      ) : null}
       <section className="panel">
         <form onSubmit={createExercise}>
           <div className="grid-3">
@@ -70,7 +91,10 @@ export function ExercisesPage() {
         {isLoading ? <EmptyState title="読み込み中" /> : null}
         <div className="list">
           {data?.exercises.map((exercise) => (
-            <article className="list-item" key={exercise.id}>
+            <article
+              className={`list-item ${recentExerciseIds.includes(exercise.id) || (exercise.sourcePresetId && recentPresetIds.includes(exercise.sourcePresetId)) ? 'is-new' : ''}`}
+              key={exercise.id}
+            >
               <div className="list-item-top">
                 <div>
                   <h3>{exercise.name}</h3>
@@ -102,8 +126,12 @@ export function ExercisesPage() {
             className="button"
             disabled={!selectedPresetIds.length}
             onClick={async () => {
-              await exerciseRepository.addFromPresets(selectedPresetIds);
+              const presetIds = selectedPresetIds;
+              const count = await exerciseRepository.addFromPresets(presetIds);
               setSelectedPresetIds([]);
+              setRecentExerciseIds([]);
+              setRecentPresetIds(presetIds);
+              setFeedback(count ? `${count} 件のプリセットをマイ種目に追加しました。` : '選択したプリセットはすでに追加済みでした。');
               reload();
             }}
           >

@@ -297,6 +297,12 @@ textarea {
   background: #fff;
 }
 
+.list-item.is-new {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  box-shadow: inset 4px 0 0 var(--accent);
+}
+
 .list-item-top {
   display: flex;
   justify-content: space-between;
@@ -361,6 +367,19 @@ textarea {
   display: block;
   margin-top: 4px;
   font-size: 21px;
+}
+
+.notice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border: 1px solid #b8ddd5;
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+  color: var(--accent-dark);
+  font-weight: 800;
 }
 
 .bottom-nav {
