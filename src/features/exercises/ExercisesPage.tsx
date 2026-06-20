@@ -21,7 +21,8 @@ export function ExercisesPage() {
 
   async function createExercise(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
     const name = validateName(String(form.get('name') ?? ''));
     if (!name) return;
     await exerciseRepository.create({
@@ -29,7 +30,7 @@ export function ExercisesPage() {
       bodyPart: form.get('bodyPart') as BodyPart,
       equipmentType: (form.get('equipmentType') || null) as EquipmentType | null
     });
-    event.currentTarget.reset();
+    formElement.reset();
     reload();
   }
 

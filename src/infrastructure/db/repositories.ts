@@ -184,7 +184,9 @@ export const bodyWeightRepository = {
 
 export const exerciseRepository = {
   async listActive() {
-    return db.exercises.where('isActive').equals(1).sortBy('sortOrder');
+    return (await db.exercises.toArray())
+      .filter((exercise) => exercise.isActive)
+      .sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name, 'ja'));
   },
 
   async listAll() {
@@ -244,7 +246,7 @@ export const menuRepository = {
   async list(): Promise<MenuTemplateDetail[]> {
     const [menus, rows, exercises] = await Promise.all([
       db.menuTemplates.orderBy('sortOrder').toArray(),
-      db.menuTemplateExercises.orderBy('sortOrder').toArray(),
+      db.menuTemplateExercises.toArray(),
       db.exercises.toArray()
     ]);
     return menus.map((menu) => ({

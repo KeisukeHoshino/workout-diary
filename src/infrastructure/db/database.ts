@@ -59,9 +59,11 @@ export async function initializeDatabase() {
     await db.exercisePresets.bulkPut(exercisePresets);
   }
 
-  if ((await db.exercises.count()) === 0) {
+  const existingExercises = await db.exercises.toArray();
+  if (existingExercises.filter((exercise) => exercise.isActive).length === 0) {
+    const existingPresetIds = new Set(existingExercises.map((exercise) => exercise.sourcePresetId).filter(Boolean));
     const initialPresets = exercisePresets.slice(0, 8);
-    await db.exercises.bulkPut(initialPresets.map((preset, index) => ({
+    await db.exercises.bulkPut(initialPresets.filter((preset) => !existingPresetIds.has(preset.id)).map((preset, index) => ({
       id: crypto.randomUUID(),
       name: preset.name,
       bodyPart: preset.bodyPart,
