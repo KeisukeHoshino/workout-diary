@@ -1,12 +1,12 @@
 import { Archive, CheckCircle2, RotateCcw } from 'lucide-react';
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useState } from 'react';
 import { EmptyState } from '../../components/common/EmptyState';
 import { ScreenHeader } from '../../components/common/ScreenHeader';
 import type { BodyPart, EquipmentType } from '../../domain/models';
 import { bodyPartLabels, equipmentTypeLabels } from '../../domain/rules';
 import { validateName } from '../../domain/validation';
 import { initializeDatabase } from '../../infrastructure/db/database';
-import { exerciseRepository } from '../../infrastructure/db/repositories';
+import { DuplicateExerciseNameError, exerciseRepository } from '../../infrastructure/db/repositories';
 import { useAsyncData } from '../shared/useAsyncData';
 
 export function ExercisesPage() {
@@ -14,6 +14,7 @@ export function ExercisesPage() {
   const [recentExerciseIds, setRecentExerciseIds] = useState<string[]>([]);
   const [recentPresetIds, setRecentPresetIds] = useState<string[]>([]);
   const [feedback, setFeedback] = useState('');
+  const [feedbackKind, setFeedbackKind] = useState<'success' | 'error'>('success');
   const { data, isLoading, reload } = useAsyncData(async () => {
     await initializeDatabase();
     const [exercises, presets] = await Promise.all([exerciseRepository.listAll(), exerciseRepository.listPresets()]);
@@ -22,38 +23,41 @@ export function ExercisesPage() {
 
   const addedPresetIds = new Set(data?.exercises.map((exercise) => exercise.sourcePresetId).filter(Boolean));
 
-  useEffect(() => {
-    if (!feedback) return;
-    const timer = window.setTimeout(() => setFeedback(''), 5000);
-    return () => window.clearTimeout(timer);
-  }, [feedback]);
-
   async function createExercise(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const formElement = event.currentTarget;
     const form = new FormData(formElement);
     const name = validateName(String(form.get('name') ?? ''));
     if (!name) {
+      setFeedbackKind('error');
       setFeedback('種目名は 1 から 40 文字で入力してください。');
       return;
     }
-    const exercise = await exerciseRepository.create({
-      name,
-      bodyPart: form.get('bodyPart') as BodyPart,
-      equipmentType: (form.get('equipmentType') || null) as EquipmentType | null
-    });
-    formElement.reset();
-    setRecentExerciseIds([exercise.id]);
-    setRecentPresetIds([]);
-    setFeedback(`${exercise.name} をマイ種目に追加しました。`);
-    reload();
+    try {
+      const exercise = await exerciseRepository.create({
+        name,
+        bodyPart: form.get('bodyPart') as BodyPart,
+        equipmentType: (form.get('equipmentType') || null) as EquipmentType | null
+      });
+      formElement.reset();
+      setRecentExerciseIds([exercise.id]);
+      setRecentPresetIds([]);
+      setFeedbackKind('success');
+      setFeedback(`${exercise.name} をマイ種目に追加しました。`);
+      reload();
+    } catch (error) {
+      setRecentExerciseIds([]);
+      setRecentPresetIds([]);
+      setFeedbackKind('error');
+      setFeedback(error instanceof DuplicateExerciseNameError ? error.message : '種目を作成できませんでした。');
+    }
   }
 
   return (
     <>
       <ScreenHeader title="マイ種目" description="よく使う種目を管理します。" />
       {feedback ? (
-        <div className="notice" role="status">
+        <div className={`notice ${feedbackKind === 'error' ? 'is-error' : ''}`} role="status">
           <CheckCircle2 size={18} aria-hidden="true" />
           <span>{feedback}</span>
         </div>
@@ -127,11 +131,14 @@ export function ExercisesPage() {
             disabled={!selectedPresetIds.length}
             onClick={async () => {
               const presetIds = selectedPresetIds;
-              const count = await exerciseRepository.addFromPresets(presetIds);
+              const result = await exerciseRepository.addFromPresets(presetIds);
               setSelectedPresetIds([]);
               setRecentExerciseIds([]);
               setRecentPresetIds(presetIds);
-              setFeedback(count ? `${count} 件のプリセットをマイ種目に追加しました。` : '選択したプリセットはすでに追加済みでした。');
+              setFeedbackKind(result.addedCount ? 'success' : 'error');
+              setFeedback(result.addedCount
+                ? `${result.addedCount} 件のプリセットをマイ種目に追加しました。${result.skippedCount ? ` ${result.skippedCount} 件は同名または追加済みのためスキップしました。` : ''}`
+                : '選択したプリセットは同名または追加済みのため追加できませんでした。');
               reload();
             }}
           >

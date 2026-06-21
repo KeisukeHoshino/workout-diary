@@ -15,6 +15,17 @@ function now() {
   return new Date().toISOString();
 }
 
+function normalizeExerciseName(name: string) {
+  return name.trim().normalize('NFKC').toLocaleLowerCase('ja-JP');
+}
+
+export class DuplicateExerciseNameError extends Error {
+  constructor(name: string) {
+    super(`${name} はすでにマイ種目に登録されています。`);
+    this.name = 'DuplicateExerciseNameError';
+  }
+}
+
 async function ensureWorkoutDay(date: LocalDateString) {
   const existing = await db.workoutDays.where('date').equals(date).first();
   if (existing) return existing;
@@ -199,6 +210,10 @@ export const exerciseRepository = {
 
   async create(input: { name: string; bodyPart: BodyPart; equipmentType: EquipmentType | null }) {
     const all = await db.exercises.toArray();
+    const normalizedName = normalizeExerciseName(input.name);
+    if (all.some((exercise) => normalizeExerciseName(exercise.name) === normalizedName)) {
+      throw new DuplicateExerciseNameError(input.name);
+    }
     const timestamp = now();
     const exercise = {
       id: uuid(),
@@ -224,9 +239,14 @@ export const exerciseRepository = {
   async addFromPresets(presetIds: string[]) {
     const [presets, exercises] = await Promise.all([db.exercisePresets.toArray(), db.exercises.toArray()]);
     const added = new Set(exercises.map((exercise) => exercise.sourcePresetId).filter(Boolean));
+    const existingNames = new Set(exercises.map((exercise) => normalizeExerciseName(exercise.name)));
     const maxOrder = exercises.length ? Math.max(...exercises.map((exercise) => exercise.sortOrder)) : 0;
     const timestamp = now();
-    const selected = presets.filter((preset) => presetIds.includes(preset.id) && !added.has(preset.id));
+    const selected = presets.filter((preset) =>
+      presetIds.includes(preset.id) &&
+      !added.has(preset.id) &&
+      !existingNames.has(normalizeExerciseName(preset.name))
+    );
     await db.exercises.bulkPut(selected.map((preset, index) => ({
       id: uuid(),
       name: preset.name,
@@ -238,7 +258,10 @@ export const exerciseRepository = {
       createdAt: timestamp,
       updatedAt: timestamp
     })));
-    return selected.length;
+    return {
+      addedCount: selected.length,
+      skippedCount: presetIds.length - selected.length
+    };
   }
 };
 
