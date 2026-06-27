@@ -56,7 +56,7 @@ export function ExercisesPage() {
   }
 
   return (
-    <div className="exercise-page">
+    <div className="exercise-page app-page">
       <ScreenHeader title="マイ種目" description="よく使う種目を管理します。" />
       {feedback ? (
         <div className={`notice ${feedbackKind === 'error' ? 'is-error' : ''}`} role="status">

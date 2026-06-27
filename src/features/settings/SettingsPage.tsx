@@ -1,3 +1,4 @@
+import { Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { ScreenHeader } from '../../components/common/ScreenHeader';
 import type { GraphRange } from '../../domain/models';
@@ -14,9 +15,12 @@ export function SettingsPage() {
   });
 
   return (
-    <>
+    <div className="settings-page app-page">
       <ScreenHeader title="設定" description="単位と端末内データを管理します。" />
-      <section className="panel">
+      <section className="panel settings-panel">
+        <div className="section-heading">
+          <h3>基本設定</h3>
+        </div>
         <div className="grid-2">
           <div className="field">
             <label>単位</label>
@@ -39,12 +43,12 @@ export function SettingsPage() {
           </div>
         </div>
       </section>
-      <section className="panel">
+      <section className="panel danger-zone">
         <div className="toolbar">
           <div>
             <h3>データ管理</h3>
             <p className="muted">IndexedDB のデータをこの端末から削除します。</p>
-            {message ? <p>{message}</p> : null}
+            {message ? <p className="settings-message">{message}</p> : null}
           </div>
           <button
             className="danger-button"
@@ -58,10 +62,11 @@ export function SettingsPage() {
               reload();
             }}
           >
+            <Trash2 size={16} aria-hidden="true" />
             全データ初期化
           </button>
         </div>
       </section>
-    </>
+    </div>
   );
 }

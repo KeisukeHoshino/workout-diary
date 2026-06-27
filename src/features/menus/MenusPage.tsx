@@ -1,3 +1,4 @@
+import { Plus, Trash2 } from "lucide-react";
 import { FormEvent, useState } from "react";
 import { EmptyState } from "../../components/common/EmptyState";
 import { ScreenHeader } from "../../components/common/ScreenHeader";
@@ -54,12 +55,15 @@ export function MenusPage() {
   }
 
   return (
-    <>
+    <div className="menus-page app-page">
       <ScreenHeader
         title="メニュー"
         description="1回分の筋トレテンプレートを作成します。"
       />
-      <section className="panel">
+      <section className="panel menu-create-panel">
+        <div className="section-heading">
+          <h3>新しいメニュー</h3>
+        </div>
         <form onSubmit={createMenu}>
           <div className="grid-2">
             <div className="field">
@@ -81,9 +85,12 @@ export function MenusPage() {
             <span className="badge">{selectedExerciseIds.length} 件選択中</span>
           </div>
           {data?.exercises.length ? (
-            <div className="grid-3">
+            <div className="menu-exercise-grid">
               {data.exercises.map((exercise) => (
-                <label className="row" key={exercise.id}>
+                <label
+                  className={`menu-exercise-option ${selectedExerciseIds.includes(exercise.id) ? "is-selected" : ""}`}
+                  key={exercise.id}
+                >
                   <input
                     type="checkbox"
                     name="exerciseIds"
@@ -113,23 +120,24 @@ export function MenusPage() {
               type="submit"
               disabled={isSubmitting || !data?.exercises.length}
             >
+              <Plus size={17} aria-hidden="true" />
               {isSubmitting ? "作成中..." : "メニューを作成"}
             </button>
           </div>
         </form>
       </section>
 
-      <section className="panel">
-        <div className="toolbar">
+      <section className="collection-section menu-library-section">
+        <div className="toolbar collection-header">
           <h3>登録メニュー</h3>
           <span className="badge">{data?.menus.length ?? 0} 件</span>
         </div>
         {!data?.menus.length ? (
           <EmptyState title="メニューがありません" />
         ) : null}
-        <div className="list">
+        <div className="list menu-list">
           {data?.menus.map((item) => (
-            <article className="list-item" key={item.menu.id}>
+            <article className="list-item menu-list-item" key={item.menu.id}>
               <div className="list-item-top">
                 <div>
                   <h3>{item.menu.name}</h3>
@@ -145,6 +153,7 @@ export function MenusPage() {
                     reload();
                   }}
                 >
+                  <Trash2 size={16} aria-hidden="true" />
                   削除
                 </button>
               </div>
@@ -152,6 +161,6 @@ export function MenusPage() {
           ))}
         </div>
       </section>
-    </>
+    </div>
   );
 }

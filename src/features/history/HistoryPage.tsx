@@ -32,13 +32,13 @@ export function HistoryPage() {
   });
 
   return (
-    <>
+    <div className="history-page app-page">
       <ScreenHeader title="日別履歴" description="過去の記録を確認して編集します。" />
-      <section className="panel">
+      <section className="collection-section history-section">
         {!data?.length ? <EmptyState title="履歴はまだありません" /> : null}
-        <div className="list">
+        <div className="list history-list">
           {data?.map((item) => (
-            <article className="list-item" key={item.date}>
+            <article className="list-item history-list-item" key={item.date}>
               <div className="list-item-top">
                 <div>
                   <h3>{dateLabel(item.date)}</h3>
@@ -67,6 +67,6 @@ export function HistoryPage() {
           ))}
         </div>
       </section>
-    </>
+    </div>
   );
 }

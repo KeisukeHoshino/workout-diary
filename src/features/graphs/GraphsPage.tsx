@@ -37,14 +37,14 @@ export function GraphsPage() {
   }, [data?.exercises, exerciseId]);
 
   return (
-    <>
+    <div className="graphs-page app-page">
       <ScreenHeader title="グラフ" description="最大重量と体重の推移を確認します。" />
-      <section className="panel">
+      <section className="panel graph-panel">
         <div className="tabs">
           <button className={`tab-button ${tab === 'weight' ? 'active' : ''}`} onClick={() => setTab('weight')}>最大重量</button>
           <button className={`tab-button ${tab === 'body' ? 'active' : ''}`} onClick={() => setTab('body')}>体重</button>
         </div>
-        <div className="grid-2">
+        <div className="grid-2 graph-filters">
           {tab === 'weight' ? (
             <div className="field">
               <label>種目</label>
@@ -66,7 +66,7 @@ export function GraphsPage() {
         </div>
         <GraphContent tab={tab} range={range} exerciseId={exerciseId} reloadKey={data?.exercises.length ?? 0} onLoaded={reload} />
       </section>
-    </>
+    </div>
   );
 }
 

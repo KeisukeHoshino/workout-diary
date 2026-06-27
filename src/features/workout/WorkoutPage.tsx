@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Plus, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ListPlus, Plus, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { EmptyState } from '../../components/common/EmptyState';
@@ -37,24 +37,26 @@ export function WorkoutPage() {
   const detail = data?.detail;
 
   return (
-    <>
+    <div className="workout-page app-page">
       <ScreenHeader
         title="今日の記録"
         description={`${dateLabel(date)} のトレーニングを記録します。`}
         actions={(
           <>
             <button className="secondary-button" onClick={() => setExercisePickerOpen((value) => !value)}>
+              <Plus size={17} aria-hidden="true" />
               種目追加
             </button>
             <button className="button" onClick={() => setMenuPickerOpen((value) => !value)}>
+              <ListPlus size={17} aria-hidden="true" />
               メニュー追加
             </button>
           </>
         )}
       />
 
-      <section className="panel">
-        <div className="grid-3">
+      <section className="panel date-panel">
+        <div className="date-control">
           <button className="icon-button" title="前日" onClick={() => changeDate(addDays(date, -1))}>
             <ChevronLeft size={18} />
           </button>
@@ -89,8 +91,8 @@ export function WorkoutPage() {
 
       <BodyWeightPanel date={date} value={detail?.bodyWeightLog?.bodyWeightKg ?? null} onSaved={reload} />
 
-      <section className="panel">
-        <div className="toolbar">
+      <section className="collection-section workout-log-section">
+        <div className="toolbar collection-header">
           <h3>セット記録</h3>
           <span className="badge">{detail?.exercises.length ?? 0} 種目</span>
         </div>
@@ -100,13 +102,13 @@ export function WorkoutPage() {
           <WorkoutExerciseCard key={item.workoutExercise.id} item={item} onChanged={reload} />
         ))}
       </section>
-    </>
+    </div>
   );
 }
 
 function PickerPanel({ exercises, onChoose }: { exercises: Exercise[]; onChoose: (exerciseId: string) => Promise<void> }) {
   return (
-    <section className="panel">
+    <section className="panel picker-panel">
       <div className="toolbar">
         <h3>種目を選択</h3>
       </div>
@@ -126,7 +128,7 @@ function PickerPanel({ exercises, onChoose }: { exercises: Exercise[]; onChoose:
 
 function MenuPickerPanel({ menus, onChoose }: { menus: MenuTemplateDetail[]; onChoose: (menuId: string) => Promise<void> }) {
   return (
-    <section className="panel">
+    <section className="panel picker-panel">
       <div className="toolbar">
         <h3>メニューを選択</h3>
       </div>
@@ -157,7 +159,7 @@ function BodyWeightPanel({ date, value, onSaved }: { date: LocalDateString; valu
   }, [value, date]);
 
   return (
-    <section className="panel">
+    <section className="panel body-weight-panel">
       <div className="grid-2">
         <div className="field">
           <label htmlFor="bodyWeight">体重 kg</label>
