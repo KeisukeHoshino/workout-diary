@@ -93,10 +93,10 @@ export function ExercisesPage() {
           <span className="badge">{data?.exercises.length ?? 0} 件</span>
         </div>
         {isLoading ? <EmptyState title="読み込み中" /> : null}
-        <div className="list">
+        <div className="list exercise-list">
           {data?.exercises.map((exercise) => (
             <article
-              className={`list-item ${recentExerciseIds.includes(exercise.id) || (exercise.sourcePresetId && recentPresetIds.includes(exercise.sourcePresetId)) ? 'is-new' : ''}`}
+              className={`list-item exercise-list-item ${recentExerciseIds.includes(exercise.id) || (exercise.sourcePresetId && recentPresetIds.includes(exercise.sourcePresetId)) ? 'is-new' : ''}`}
               key={exercise.id}
             >
               <div className="list-item-top">
