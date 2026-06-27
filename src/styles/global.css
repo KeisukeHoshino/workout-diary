@@ -773,6 +773,72 @@ textarea {
   line-height: 1.55;
 }
 
+.menu-list-item.is-editing {
+  grid-column: 1 / -1;
+  min-height: 0;
+  padding: 20px;
+  border-color: var(--accent);
+  background: #f8fcfb;
+  box-shadow: inset 4px 0 0 var(--accent);
+}
+
+.menu-item-actions {
+  justify-content: flex-end;
+}
+
+.menu-memo {
+  margin: 6px 0 0;
+  color: var(--ink);
+  font-size: 14px;
+}
+
+.menu-edit-form {
+  display: grid;
+  gap: 16px;
+}
+
+.menu-edit-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.menu-edit-heading h3,
+.menu-edit-heading .muted {
+  margin: 0;
+}
+
+.menu-edit-heading .muted {
+  margin-top: 4px;
+}
+
+.menu-edit-actions {
+  justify-content: flex-end;
+}
+
+.status-message {
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border-left: 4px solid var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-dark);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.menu-edit-form .status-message {
+  margin: 0;
+}
+
+.status-message.is-error {
+  border-left-color: var(--danger);
+  background: #fff3f1;
+  color: var(--danger);
+}
+
 .danger-zone {
   margin-top: 28px;
   border-color: #e1aaa4;
@@ -865,6 +931,25 @@ textarea {
 
   .menu-exercise-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .menu-list-item.is-editing {
+    padding: 16px;
+  }
+
+  .menu-edit-heading {
+    display: grid;
+  }
+
+  .menu-edit-actions,
+  .menu-item-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .menu-edit-actions > *,
+  .menu-item-actions > * {
+    width: 100%;
   }
 
   .menu-create-panel,

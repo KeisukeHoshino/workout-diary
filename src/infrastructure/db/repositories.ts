@@ -310,6 +310,32 @@ export const menuRepository = {
     return menu;
   },
 
+  async update(id: string, input: { name: string; memo: string; exerciseIds: string[] }) {
+    const exerciseIds = [...new Set(input.exerciseIds)];
+    const timestamp = now();
+
+    await db.transaction('rw', db.menuTemplates, db.menuTemplateExercises, async () => {
+      const menu = await db.menuTemplates.get(id);
+      if (!menu) throw new Error('更新するメニューが見つかりません。');
+
+      await db.menuTemplates.put({
+        ...menu,
+        name: input.name,
+        memo: input.memo,
+        updatedAt: timestamp
+      });
+      await db.menuTemplateExercises.where('menuTemplateId').equals(id).delete();
+      await db.menuTemplateExercises.bulkPut(exerciseIds.map((exerciseId, index) => ({
+        id: uuid(),
+        menuTemplateId: id,
+        exerciseId,
+        sortOrder: (index + 1) * 10,
+        createdAt: timestamp,
+        updatedAt: timestamp
+      })));
+    });
+  },
+
   async delete(id: string) {
     await db.transaction('rw', db.menuTemplates, db.menuTemplateExercises, async () => {
       await db.menuTemplateExercises.where('menuTemplateId').equals(id).delete();
