@@ -1,4 +1,4 @@
-import { Archive, CheckCircle2, RotateCcw } from 'lucide-react';
+import { Archive, CheckCircle2, Plus, RotateCcw } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 import { EmptyState } from '../../components/common/EmptyState';
 import { ScreenHeader } from '../../components/common/ScreenHeader';
@@ -22,9 +22,8 @@ export function ExercisesPage() {
   });
 
   const addedPresetIds = new Set(data?.exercises.map((exercise) => exercise.sourcePresetId).filter(Boolean));
-  const sortedPresets = [...(data?.presets ?? [])].sort((a, b) =>
-    Number(addedPresetIds.has(a.id)) - Number(addedPresetIds.has(b.id))
-  );
+  const availablePresets = data?.presets.filter((preset) => !addedPresetIds.has(preset.id)) ?? [];
+  const addedPresets = data?.presets.filter((preset) => addedPresetIds.has(preset.id)) ?? [];
 
   async function createExercise(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -57,7 +56,7 @@ export function ExercisesPage() {
   }
 
   return (
-    <>
+    <div className="exercise-page">
       <ScreenHeader title="マイ種目" description="よく使う種目を管理します。" />
       {feedback ? (
         <div className={`notice ${feedbackKind === 'error' ? 'is-error' : ''}`} role="status">
@@ -65,7 +64,10 @@ export function ExercisesPage() {
           <span>{feedback}</span>
         </div>
       ) : null}
-      <section className="panel">
+      <section className="panel exercise-create-panel">
+        <div className="section-heading">
+          <h3>新しい種目</h3>
+        </div>
         <form onSubmit={createExercise}>
           <div className="grid-3">
             <div className="field">
@@ -85,13 +87,16 @@ export function ExercisesPage() {
             </div>
           </div>
           <div className="actions" style={{ marginTop: 12 }}>
-            <button className="button">種目を作成</button>
+            <button className="button">
+              <Plus size={17} aria-hidden="true" />
+              種目を作成
+            </button>
           </div>
         </form>
       </section>
 
-      <section className="panel">
-        <div className="toolbar">
+      <section className="collection-section">
+        <div className="toolbar collection-header">
           <h3>一覧</h3>
           <span className="badge">{data?.exercises.length ?? 0} 件</span>
         </div>
@@ -99,7 +104,7 @@ export function ExercisesPage() {
         <div className="list responsive-card-list">
           {data?.exercises.map((exercise) => (
             <article
-              className={`list-item exercise-list-item ${recentExerciseIds.includes(exercise.id) || (exercise.sourcePresetId && recentPresetIds.includes(exercise.sourcePresetId)) ? 'is-new' : ''}`}
+              className={`list-item exercise-list-item ${exercise.isActive ? '' : 'is-inactive'} ${recentExerciseIds.includes(exercise.id) || (exercise.sourcePresetId && recentPresetIds.includes(exercise.sourcePresetId)) ? 'is-new' : ''}`}
               key={exercise.id}
             >
               <div className="list-item-top">
@@ -126,8 +131,8 @@ export function ExercisesPage() {
         </div>
       </section>
 
-      <section className="panel">
-        <div className="toolbar">
+      <section className="collection-section preset-section">
+        <div className="toolbar collection-header preset-header">
           <h3>プリセット追加</h3>
           <button
             className="button"
@@ -149,42 +154,51 @@ export function ExercisesPage() {
           </button>
         </div>
         <div className="list responsive-card-list">
-          {sortedPresets.map((preset) => {
-            const isAdded = addedPresetIds.has(preset.id);
+          <div className="preset-group-heading">
+            <h4>追加できる種目</h4>
+            <span>{availablePresets.length} 件</span>
+          </div>
+          {availablePresets.map((preset) => {
             const checked = selectedPresetIds.includes(preset.id);
-            const content = (
-              <>
+            return (
+              <label className={`list-item preset-list-item ${checked ? 'is-selected' : ''}`} key={preset.id}>
                 <span className="list-item-top">
                   <span>
                     <strong>{preset.name}</strong>
-                    <span className="muted"> {bodyPartLabels[preset.bodyPart]}</span>
+                    <span className="muted">{bodyPartLabels[preset.bodyPart]}</span>
                   </span>
-                  <span className={`badge preset-status ${isAdded ? 'is-added' : 'is-pending'}`}>
-                    {isAdded ? '追加済み' : '未追加'}
-                  </span>
+                  <span className="badge preset-status is-pending">未追加</span>
                 </span>
-                {isAdded ? null : (
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    onChange={(event) => {
-                      setSelectedPresetIds((current) => event.target.checked
-                        ? [...current, preset.id]
-                        : current.filter((id) => id !== preset.id));
-                    }}
-                  />
-                )}
-              </>
-            );
-            return isAdded ? (
-              <article className="list-item preset-list-item is-added" key={preset.id}>{content}</article>
-            ) : (
-              <label className={`list-item preset-list-item ${checked ? 'is-selected' : ''}`} key={preset.id}>{content}</label>
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={(event) => {
+                    setSelectedPresetIds((current) => event.target.checked
+                      ? [...current, preset.id]
+                      : current.filter((id) => id !== preset.id));
+                  }}
+                />
+              </label>
             );
           })}
+          <div className="preset-group-heading is-added">
+            <h4>追加済み</h4>
+            <span>{addedPresets.length} 件</span>
+          </div>
+          {addedPresets.map((preset) => (
+            <article className="list-item preset-list-item is-added" key={preset.id}>
+              <span className="list-item-top">
+                <span>
+                  <strong>{preset.name}</strong>
+                  <span className="muted">{bodyPartLabels[preset.bodyPart]}</span>
+                </span>
+                <span className="badge preset-status is-added">追加済み</span>
+              </span>
+            </article>
+          ))}
         </div>
       </section>
-    </>
+    </div>
   );
 }
 
