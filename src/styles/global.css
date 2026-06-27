@@ -306,17 +306,32 @@ textarea {
   justify-content: center;
 }
 
-.preset-list-item {
+.list-item.preset-list-item {
   display: grid;
   grid-template-rows: 1fr auto;
   gap: 12px;
   min-width: 0;
+  border-color: #82bdb7;
+  background: #fff;
+  box-shadow: inset 4px 0 0 var(--accent);
   cursor: pointer;
 }
 
+.preset-list-item.is-selected {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
 .preset-list-item.is-added {
-  background: var(--panel-2);
+  border-color: #aeb9b7;
+  background: #e2e7e6;
+  box-shadow: none;
+  color: #46535c;
   cursor: default;
+}
+
+.preset-list-item.is-added .muted {
+  color: #59666f;
 }
 
 .preset-list-item .list-item-top {
@@ -332,6 +347,16 @@ textarea {
 
 .preset-list-item .muted {
   margin-top: 4px;
+}
+
+.preset-status.is-pending {
+  background: var(--accent-soft);
+  color: var(--accent-dark);
+}
+
+.preset-status.is-added {
+  background: #59666f;
+  color: #fff;
 }
 
 .preset-list-item input[type="checkbox"] {

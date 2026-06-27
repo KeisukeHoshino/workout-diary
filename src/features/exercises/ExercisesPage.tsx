@@ -159,7 +159,9 @@ export function ExercisesPage() {
                     <strong>{preset.name}</strong>
                     <span className="muted"> {bodyPartLabels[preset.bodyPart]}</span>
                   </span>
-                  <span className="badge">{isAdded ? '追加済み' : '未追加'}</span>
+                  <span className={`badge preset-status ${isAdded ? 'is-added' : 'is-pending'}`}>
+                    {isAdded ? '追加済み' : '未追加'}
+                  </span>
                 </span>
                 {isAdded ? null : (
                   <input
@@ -177,7 +179,7 @@ export function ExercisesPage() {
             return isAdded ? (
               <article className="list-item preset-list-item is-added" key={preset.id}>{content}</article>
             ) : (
-              <label className="list-item preset-list-item" key={preset.id}>{content}</label>
+              <label className={`list-item preset-list-item ${checked ? 'is-selected' : ''}`} key={preset.id}>{content}</label>
             );
           })}
         </div>
