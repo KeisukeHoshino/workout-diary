@@ -290,7 +290,7 @@ textarea {
   gap: 10px;
 }
 
-.exercise-list {
+.responsive-card-list {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
@@ -304,6 +304,37 @@ textarea {
 .exercise-list-item .secondary-button {
   width: 100%;
   justify-content: center;
+}
+
+.preset-list-item {
+  display: grid;
+  grid-template-rows: 1fr auto;
+  gap: 12px;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.preset-list-item .list-item-top {
+  display: grid;
+  gap: 8px;
+}
+
+.preset-list-item strong,
+.preset-list-item .muted {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.preset-list-item .muted {
+  margin-top: 4px;
+}
+
+.preset-list-item input[type="checkbox"] {
+  width: 20px;
+  min-height: 20px;
+  margin: 0;
+  justify-self: end;
+  accent-color: var(--accent);
 }
 
 .list-item {
@@ -409,7 +440,7 @@ textarea {
 }
 
 @media (min-width: 1024px) {
-  .exercise-list {
+  .responsive-card-list {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }

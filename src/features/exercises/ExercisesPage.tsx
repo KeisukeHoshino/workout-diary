@@ -93,7 +93,7 @@ export function ExercisesPage() {
           <span className="badge">{data?.exercises.length ?? 0} 件</span>
         </div>
         {isLoading ? <EmptyState title="読み込み中" /> : null}
-        <div className="list exercise-list">
+        <div className="list responsive-card-list">
           {data?.exercises.map((exercise) => (
             <article
               className={`list-item exercise-list-item ${recentExerciseIds.includes(exercise.id) || (exercise.sourcePresetId && recentPresetIds.includes(exercise.sourcePresetId)) ? 'is-new' : ''}`}
@@ -145,12 +145,12 @@ export function ExercisesPage() {
             選択した種目を追加
           </button>
         </div>
-        <div className="list">
+        <div className="list responsive-card-list">
           {data?.presets.map((preset) => {
             const disabled = addedPresetIds.has(preset.id);
             const checked = selectedPresetIds.includes(preset.id);
             return (
-              <label className="list-item" key={preset.id}>
+              <label className="list-item preset-list-item" key={preset.id}>
                 <span className="list-item-top">
                   <span>
                     <strong>{preset.name}</strong>
