@@ -314,6 +314,11 @@ textarea {
   cursor: pointer;
 }
 
+.preset-list-item.is-added {
+  background: var(--panel-2);
+  cursor: default;
+}
+
 .preset-list-item .list-item-top {
   display: grid;
   gap: 8px;

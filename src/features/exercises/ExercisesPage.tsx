@@ -22,6 +22,9 @@ export function ExercisesPage() {
   });
 
   const addedPresetIds = new Set(data?.exercises.map((exercise) => exercise.sourcePresetId).filter(Boolean));
+  const sortedPresets = [...(data?.presets ?? [])].sort((a, b) =>
+    Number(addedPresetIds.has(a.id)) - Number(addedPresetIds.has(b.id))
+  );
 
   async function createExercise(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -146,29 +149,35 @@ export function ExercisesPage() {
           </button>
         </div>
         <div className="list responsive-card-list">
-          {data?.presets.map((preset) => {
-            const disabled = addedPresetIds.has(preset.id);
+          {sortedPresets.map((preset) => {
+            const isAdded = addedPresetIds.has(preset.id);
             const checked = selectedPresetIds.includes(preset.id);
-            return (
-              <label className="list-item preset-list-item" key={preset.id}>
+            const content = (
+              <>
                 <span className="list-item-top">
                   <span>
                     <strong>{preset.name}</strong>
                     <span className="muted"> {bodyPartLabels[preset.bodyPart]}</span>
                   </span>
-                  <span className="badge">{disabled ? '追加済み' : '未追加'}</span>
+                  <span className="badge">{isAdded ? '追加済み' : '未追加'}</span>
                 </span>
-                <input
-                  type="checkbox"
-                  disabled={disabled}
-                  checked={checked}
-                  onChange={(event) => {
-                    setSelectedPresetIds((current) => event.target.checked
-                      ? [...current, preset.id]
-                      : current.filter((id) => id !== preset.id));
-                  }}
-                />
-              </label>
+                {isAdded ? null : (
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={(event) => {
+                      setSelectedPresetIds((current) => event.target.checked
+                        ? [...current, preset.id]
+                        : current.filter((id) => id !== preset.id));
+                    }}
+                  />
+                )}
+              </>
+            );
+            return isAdded ? (
+              <article className="list-item preset-list-item is-added" key={preset.id}>{content}</article>
+            ) : (
+              <label className="list-item preset-list-item" key={preset.id}>{content}</label>
             );
           })}
         </div>
