@@ -41,7 +41,24 @@
         </div>
       </section>
       <section>
-        <div class="section-head"><h2>2. データフロー</h2></div>
+        <div class="section-head"><h2>2. 画面操作設計</h2></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>操作</th><th>エラー条件</th><th>表示メッセージ</th><th>タイミングと動作</th></tr></thead>
+            <tbody>
+              <tr><td>メニューを保存</td><td>前後の空白を除去したメニュー名が0文字。</td><td>メニュー名を入力してください</td><td>保存押下時に入力欄直下へ表示し、保存しない。メニュー名へフォーカスする。</td></tr>
+              <tr><td>メニューを保存</td><td>前後の空白を除去したメニュー名が40文字を超える。</td><td>メニュー名は40文字以内で入力してください</td><td>入力時および保存押下時に入力欄直下へ表示し、保存しない。</td></tr>
+              <tr><td>メニューを保存</td><td>メモが500文字を超える。</td><td>メモは500文字以内で入力してください</td><td>入力時および保存押下時に入力欄直下へ表示し、保存しない。</td></tr>
+              <tr><td>メニューを保存</td><td>有効な種目が1件も登録されていない。</td><td>種目を1つ以上追加してください</td><td>保存押下時に種目一覧の下へ表示し、保存しない。</td></tr>
+              <tr><td>種目を追加</td><td>同じ種目がすでに編集中のメニューへ登録されている。</td><td>この種目はすでにメニューへ追加されています</td><td>選択時に追加せず、種目選択シート内の該当行へ表示する。</td></tr>
+              <tr><td>種目を追加</td><td>選択した種目が非表示になっている。</td><td>非表示の種目は新しく追加できません</td><td>追加直前に再検証し、追加しない。該当行を選択不可表示へ切り替える。</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>複数項目にエラーがある場合はすべて表示し、画面内で最初のエラー項目へフォーカスする。入力または選択が正常になった項目のメッセージは即時解除する。</p>
+      </section>
+      <section>
+        <div class="section-head"><h2>3. データフロー</h2></div>
         <div class="flow-row">
           <div class="flow-node"><strong>MenuTemplate</strong><span>ユーザーが作成した1回分メニュー。</span></div>
           <div class="flow-node"><strong>MenuTemplateExercise</strong><span>sortOrder 昇順で取得。</span></div>
@@ -51,7 +68,7 @@
         </div>
       </section>
       <section>
-        <div class="section-head"><h2>3. 重要コード</h2></div>
+        <div class="section-head"><h2>4. 重要コード</h2></div>
         <pre><code class="language-ts">export async function addMenuToDate(date: LocalDateString, menuTemplateId: UUID) {
   await db.transaction('rw', db.workoutDays, db.workoutExercises, db.workoutSets, db.menuTemplateExercises, async () =&gt; {
     const day = await ensureWorkoutDay(date);
@@ -76,8 +93,9 @@
       <section class="review-panel">
         <h3>レビュー指摘Markdown生成</h3>
         <div class="review-source" data-review-title="1. UIモックアップ"><label>1. UIモックアップ</label><textarea placeholder="指摘を入力"></textarea></div>
-        <div class="review-source" data-review-title="2. データフロー"><label>2. データフロー</label><textarea placeholder="指摘を入力"></textarea></div>
-        <div class="review-source" data-review-title="3. 重要コード"><label>3. 重要コード</label><textarea placeholder="指摘を入力"></textarea></div>
+        <div class="review-source" data-review-title="2. 画面操作設計"><label>2. 画面操作設計</label><textarea placeholder="指摘を入力"></textarea></div>
+        <div class="review-source" data-review-title="3. データフロー"><label>3. データフロー</label><textarea placeholder="指摘を入力"></textarea></div>
+        <div class="review-source" data-review-title="4. 重要コード"><label>4. 重要コード</label><textarea placeholder="指摘を入力"></textarea></div>
         <div class="button-row"><button class="small-btn" type="button" id="copyPromptBtn">Markdownをコピー</button><button class="small-btn" type="button" id="downloadPromptBtn">Markdownファイルを生成</button><button class="small-btn" type="button" id="clearPromptBtn">入力をクリア</button></div>
         <textarea class="prompt-output" id="promptOutput" readonly></textarea>
       </section>

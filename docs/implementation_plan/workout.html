@@ -123,7 +123,7 @@
       </section>
 
       <section>
-        <div class="section-head"><h2>2. 状態と操作</h2></div>
+        <div class="section-head"><h2>2. 画面操作設計</h2></div>
         <div class="table-wrap">
           <table>
             <thead><tr><th>操作</th><th>イベント</th><th>結果</th></tr></thead>
@@ -138,6 +138,29 @@
             </tbody>
           </table>
         </div>
+        <h3>バリデーションとエラー表示</h3>
+        <p>入力のたびに検証し、不正値は IndexedDB へ保存しない。エラーは対象入力欄の直下に表示し、値が正常になった時点で解除して自動保存を再開する。</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>対象</th><th>エラー条件</th><th>表示メッセージ</th><th>タイミングと動作</th></tr></thead>
+            <tbody>
+              <tr><td>日付</td><td>URL query またはカレンダー入力が実在する `YYYY-MM-DD` 形式ではない。</td><td>日付を正しく入力してください</td><td>日付決定時に検証する。対象日の取得と URL 更新を行わず、当日表示を維持する。</td></tr>
+              <tr><td>体重</td><td>空欄以外で数値に変換できない。</td><td>体重は数値で入力してください</td><td>入力時に表示する。自動保存を開始しない。</td></tr>
+              <tr><td>体重</td><td>0 未満または 999.9 を超える。</td><td>体重は0〜999.9kgで入力してください</td><td>入力時に表示する。自動保存を開始しない。</td></tr>
+              <tr><td>体重</td><td>小数第2位以下が入力されている。</td><td>体重は小数第1位までで入力してください</td><td>入力時に表示する。値を丸めず、ユーザーの修正を待つ。</td></tr>
+              <tr><td>セット重量</td><td>空欄以外で数値に変換できない。</td><td>重量は数値で入力してください</td><td>入力時に対象セット行へ表示する。対象行の自動保存を開始しない。</td></tr>
+              <tr><td>セット重量</td><td>0 未満または 999.9 を超える。</td><td>重量は0〜999.9kgで入力してください</td><td>入力時に対象セット行へ表示する。対象行の自動保存を開始しない。</td></tr>
+              <tr><td>セット重量</td><td>小数第2位以下が入力されている。</td><td>重量は小数第1位までで入力してください</td><td>入力時に対象セット行へ表示する。値を丸めず、ユーザーの修正を待つ。</td></tr>
+              <tr><td>回数</td><td>空欄以外で整数に変換できない。</td><td>回数は整数で入力してください</td><td>入力時に対象セット行へ表示する。対象行の自動保存を開始しない。</td></tr>
+              <tr><td>回数</td><td>1 未満または 999 を超える。</td><td>回数は1〜999回で入力してください</td><td>入力時に対象セット行へ表示する。対象行の自動保存を開始しない。</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <ul>
+          <li>体重、重量、回数は空欄を許容し、空欄へ戻した場合はエラーを解除して `null` として保存する。</li>
+          <li>重量と回数は片方だけの入力も許容する。</li>
+          <li>保存処理自体が失敗した場合はバリデーションエラーと区別し、「保存できませんでした。再試行してください」を対象欄または対象セット行へ表示する。</li>
+        </ul>
       </section>
 
       <section>
@@ -181,7 +204,7 @@
       <section class="review-panel">
         <h3>レビュー指摘Markdown生成</h3>
         <div class="review-source" data-review-title="1. UIモックアップ"><label>1. UIモックアップ</label><textarea placeholder="指摘を入力"></textarea></div>
-        <div class="review-source" data-review-title="2. 状態と操作"><label>2. 状態と操作</label><textarea placeholder="指摘を入力"></textarea></div>
+        <div class="review-source" data-review-title="2. 画面操作設計"><label>2. 画面操作設計</label><textarea placeholder="指摘を入力"></textarea></div>
         <div class="review-source" data-review-title="3. データフロー"><label>3. データフロー</label><textarea placeholder="指摘を入力"></textarea></div>
         <div class="review-source" data-review-title="4. 重要コード"><label>4. 重要コード</label><textarea placeholder="指摘を入力"></textarea></div>
         <div class="button-row"><button class="small-btn" type="button" id="copyPromptBtn">Markdownをコピー</button><button class="small-btn" type="button" id="downloadPromptBtn">Markdownファイルを生成</button><button class="small-btn" type="button" id="clearPromptBtn">入力をクリア</button></div>

@@ -43,7 +43,24 @@
         </div>
       </section>
       <section>
-        <div class="section-head"><h2>2. データフロー</h2></div>
+        <div class="section-head"><h2>2. 画面操作設計</h2></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>操作</th><th>エラー条件</th><th>表示メッセージ</th><th>タイミングと動作</th></tr></thead>
+            <tbody>
+              <tr><td>種目名を保存</td><td>前後の空白を除去した種目名が0文字。</td><td>種目名を入力してください</td><td>保存押下時に入力欄直下へ表示し、保存しない。種目名へフォーカスする。</td></tr>
+              <tr><td>種目名を保存</td><td>前後の空白を除去した種目名が40文字を超える。</td><td>種目名は40文字以内で入力してください</td><td>入力時および保存押下時に入力欄直下へ表示し、保存しない。</td></tr>
+              <tr><td>部位を保存</td><td>部位が選択されていない。</td><td>部位を選択してください</td><td>保存押下時に部位選択欄直下へ表示し、保存しない。</td></tr>
+              <tr><td>種目タイプを保存</td><td>種目タイプが選択されていない。</td><td>種目タイプを選択してください</td><td>保存押下時に種目タイプ選択欄直下へ表示し、保存しない。</td></tr>
+              <tr><td>プリセットから追加</td><td>追加対象が1件も選択されていない。</td><td>追加する種目を1つ以上選択してください</td><td>追加押下時に選択一覧の下へ表示し、シートを閉じない。</td></tr>
+              <tr><td>プリセットから追加</td><td>選択後に別処理で同じ `sourcePresetId` が追加済みになった。</td><td>選択した種目はすでにマイ種目へ追加されています</td><td>登録直前に再検証する。重複分を登録せず、該当行を選択解除して追加済み表示へ切り替える。</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>複数項目にエラーがある場合はすべて表示し、画面内で最初のエラー項目へフォーカスする。入力または選択が正常になった項目のメッセージは即時解除する。</p>
+      </section>
+      <section>
+        <div class="section-head"><h2>3. データフロー</h2></div>
         <div class="flow-row">
           <div class="flow-node"><strong>ExercisePreset</strong><span>標準種目を検索、部位で絞り込み。</span></div>
           <div class="flow-node"><strong>複数選択</strong><span>追加済みは選択不可。</span></div>
@@ -52,7 +69,7 @@
         </div>
       </section>
       <section>
-        <div class="section-head"><h2>3. 重要コード</h2></div>
+        <div class="section-head"><h2>4. 重要コード</h2></div>
         <pre><code class="language-ts">export async function addFromPresets(presetIds: UUID[]) {
   return db.transaction('rw', db.exercisePresets, db.exercises, async () =&gt; {
     const existing = await db.exercises
@@ -75,8 +92,9 @@
       <section class="review-panel">
         <h3>レビュー指摘Markdown生成</h3>
         <div class="review-source" data-review-title="1. UIモックアップ"><label>1. UIモックアップ</label><textarea placeholder="指摘を入力"></textarea></div>
-        <div class="review-source" data-review-title="2. データフロー"><label>2. データフロー</label><textarea placeholder="指摘を入力"></textarea></div>
-        <div class="review-source" data-review-title="3. 重要コード"><label>3. 重要コード</label><textarea placeholder="指摘を入力"></textarea></div>
+        <div class="review-source" data-review-title="2. 画面操作設計"><label>2. 画面操作設計</label><textarea placeholder="指摘を入力"></textarea></div>
+        <div class="review-source" data-review-title="3. データフロー"><label>3. データフロー</label><textarea placeholder="指摘を入力"></textarea></div>
+        <div class="review-source" data-review-title="4. 重要コード"><label>4. 重要コード</label><textarea placeholder="指摘を入力"></textarea></div>
         <div class="button-row"><button class="small-btn" type="button" id="copyPromptBtn">Markdownをコピー</button><button class="small-btn" type="button" id="downloadPromptBtn">Markdownファイルを生成</button><button class="small-btn" type="button" id="clearPromptBtn">入力をクリア</button></div>
         <textarea class="prompt-output" id="promptOutput" readonly></textarea>
       </section>
