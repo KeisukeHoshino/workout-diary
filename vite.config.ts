@@ -7,19 +7,36 @@ import { cloudflare } from "@cloudflare/vite-plugin";
 export default defineConfig({
   plugins: [react(), VitePWA({
     registerType: 'autoUpdate',
+    includeAssets: ['icon.svg', 'apple-touch-icon.png'],
     manifest: {
+      id: '/',
       name: '筋トレ日記',
       short_name: '筋トレ日記',
+      description: '筋トレと体重をすばやく記録できるオフライン対応アプリ',
       start_url: '/',
       display: 'standalone',
       background_color: '#f4f6f5',
       theme_color: '#16776f',
       lang: 'ja',
+      categories: ['health', 'fitness', 'lifestyle'],
       icons: [
         {
-          src: '/icon.svg',
-          sizes: 'any',
-          type: 'image/svg+xml'
+          src: '/icon-192.png',
+          sizes: '192x192',
+          type: 'image/png',
+          purpose: 'any'
+        },
+        {
+          src: '/icon-512.png',
+          sizes: '512x512',
+          type: 'image/png',
+          purpose: 'any'
+        },
+        {
+          src: '/maskable-icon-512.png',
+          sizes: '512x512',
+          type: 'image/png',
+          purpose: 'maskable'
         }
       ]
     }

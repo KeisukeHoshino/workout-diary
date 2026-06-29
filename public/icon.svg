@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="筋トレ日記">
+  <rect width="512" height="512" fill="#17202a"/>
+  <rect x="80" y="80" width="352" height="352" rx="88" fill="#16776f"/>
+  <rect x="368" y="136" width="24" height="240" rx="12" fill="#b85337"/>
+  <rect x="205" y="136" width="36" height="240" rx="18" fill="#f7faf9"/>
+  <rect x="271" y="136" width="36" height="240" rx="18" fill="#f7faf9"/>
+</svg>
