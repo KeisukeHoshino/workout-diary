@@ -7,7 +7,8 @@ export type GraphRange = '1m' | '3m' | '6m' | 'all';
 export type BodyPart =
   | 'chest'
   | 'back'
-  | 'legs'
+  | 'quadriceps'
+  | 'hamstrings'
   | 'shoulders'
   | 'arms'
   | 'abs'

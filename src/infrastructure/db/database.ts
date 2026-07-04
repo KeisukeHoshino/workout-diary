@@ -12,6 +12,44 @@ import type {
 } from '../../domain/models';
 import { exercisePresets } from './seedPresets';
 
+const databaseSchema = {
+  userSettings: 'id',
+  exercisePresets: 'id, bodyPart, name, sortOrder',
+  exercises: 'id, bodyPart, isActive, sourcePresetId, sortOrder, updatedAt',
+  workoutDays: 'id, &date, updatedAt',
+  workoutExercises: 'id, workoutDayId, exerciseId, [workoutDayId+sortOrder]',
+  workoutSets: 'id, workoutExerciseId, [workoutExerciseId+setNumber]',
+  bodyWeightLogs: 'id, &date, updatedAt',
+  menuTemplates: 'id, sortOrder, updatedAt',
+  menuTemplateExercises: 'id, menuTemplateId, exerciseId, [menuTemplateId+sortOrder]'
+};
+
+type LegacyBodyPart = Exercise['bodyPart'] | 'legs';
+type LegacyExercise = Omit<Exercise, 'bodyPart'> & { bodyPart: LegacyBodyPart };
+type LegacyExercisePreset = Omit<ExercisePreset, 'bodyPart'> & { bodyPart: LegacyBodyPart };
+
+function migratedLegBodyPart(name: string, sourcePresetId: string | null): Exercise['bodyPart'] {
+  const normalizedName = name.trim().normalize('NFKC').toLocaleLowerCase('ja-JP');
+  const hamstringsKeywords = [
+    'レッグカール',
+    'ハムストリング',
+    'ルーマニアン',
+    'スティッフレッグ',
+    'ノルディック',
+    'グッドモーニング',
+    'leg curl',
+    'hamstring',
+    'romanian',
+    'stiff leg',
+    'nordic',
+    'good morning'
+  ];
+
+  return sourcePresetId === 'preset-leg-curl' || hamstringsKeywords.some((keyword) => normalizedName.includes(keyword))
+    ? 'hamstrings'
+    : 'quadriceps';
+}
+
 export class WorkoutDiaryDatabase extends Dexie {
   userSettings!: EntityTable<UserSettings, 'id'>;
   exercisePresets!: EntityTable<ExercisePreset, 'id'>;
@@ -25,16 +63,20 @@ export class WorkoutDiaryDatabase extends Dexie {
 
   constructor() {
     super('workoutDiary');
-    this.version(1).stores({
-      userSettings: 'id',
-      exercisePresets: 'id, bodyPart, name, sortOrder',
-      exercises: 'id, bodyPart, isActive, sourcePresetId, sortOrder, updatedAt',
-      workoutDays: 'id, &date, updatedAt',
-      workoutExercises: 'id, workoutDayId, exerciseId, [workoutDayId+sortOrder]',
-      workoutSets: 'id, workoutExerciseId, [workoutExerciseId+setNumber]',
-      bodyWeightLogs: 'id, &date, updatedAt',
-      menuTemplates: 'id, sortOrder, updatedAt',
-      menuTemplateExercises: 'id, menuTemplateId, exerciseId, [menuTemplateId+sortOrder]'
+    this.version(1).stores(databaseSchema);
+    this.version(2).stores(databaseSchema).upgrade(async (transaction) => {
+      const timestamp = new Date().toISOString();
+
+      await transaction.table('exercisePresets').toCollection().modify((preset: LegacyExercisePreset) => {
+        if (preset.bodyPart !== 'legs') return;
+        preset.bodyPart = migratedLegBodyPart(preset.name, preset.id);
+      });
+
+      await transaction.table('exercises').toCollection().modify((exercise: LegacyExercise) => {
+        if (exercise.bodyPart !== 'legs') return;
+        exercise.bodyPart = migratedLegBodyPart(exercise.name, exercise.sourcePresetId);
+        exercise.updatedAt = timestamp;
+      });
     });
   }
 }

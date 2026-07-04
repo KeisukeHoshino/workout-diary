@@ -3,7 +3,8 @@ import type { BodyPart, EquipmentType, GraphRange, LocalDateString } from './mod
 export const bodyPartLabels: Record<BodyPart, string> = {
   chest: '胸',
   back: '背中',
-  legs: '脚',
+  quadriceps: '大腿四頭筋',
+  hamstrings: 'ハムストリングス',
   shoulders: '肩',
   arms: '腕',
   abs: '腹',
