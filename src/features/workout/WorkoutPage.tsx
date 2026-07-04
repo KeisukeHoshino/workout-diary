@@ -41,18 +41,6 @@ export function WorkoutPage() {
       <ScreenHeader
         title="今日の記録"
         description={`${dateLabel(date)} のトレーニングを記録します。`}
-        actions={(
-          <>
-            <button className="secondary-button" onClick={() => setExercisePickerOpen((value) => !value)}>
-              <Plus size={17} aria-hidden="true" />
-              種目追加
-            </button>
-            <button className="button" onClick={() => setMenuPickerOpen((value) => !value)}>
-              <ListPlus size={17} aria-hidden="true" />
-              メニュー追加
-            </button>
-          </>
-        )}
       />
 
       <section className="panel date-panel">
@@ -63,6 +51,46 @@ export function WorkoutPage() {
           <input type="date" value={date} onChange={(event) => changeDate(event.target.value as LocalDateString)} />
           <button className="icon-button" title="翌日" onClick={() => changeDate(addDays(date, 1))}>
             <ChevronRight size={18} />
+          </button>
+        </div>
+      </section>
+
+      <BodyWeightPanel date={date} value={detail?.bodyWeightLog?.bodyWeightKg ?? null} onSaved={reload} />
+
+      <section className="collection-section workout-log-section">
+        <div className="toolbar collection-header">
+          <h3>セット記録</h3>
+          <span className="badge">{detail?.exercises.length ?? 0} 種目</span>
+        </div>
+        {isLoading ? <EmptyState title="読み込み中" /> : null}
+        {!isLoading && detail?.exercises.length === 0 ? <EmptyState title="まだ種目がありません">種目またはメニューを追加してください。</EmptyState> : null}
+        {detail?.exercises.map((item) => (
+          <WorkoutExerciseCard key={item.workoutExercise.id} item={item} onChanged={reload} />
+        ))}
+        <div className="workout-add-actions">
+          <button
+            className="secondary-button"
+            type="button"
+            aria-expanded={exercisePickerOpen}
+            onClick={() => {
+              setExercisePickerOpen((value) => !value);
+              setMenuPickerOpen(false);
+            }}
+          >
+            <Plus size={17} aria-hidden="true" />
+            種目追加
+          </button>
+          <button
+            className="button"
+            type="button"
+            aria-expanded={menuPickerOpen}
+            onClick={() => {
+              setMenuPickerOpen((value) => !value);
+              setExercisePickerOpen(false);
+            }}
+          >
+            <ListPlus size={17} aria-hidden="true" />
+            メニュー追加
           </button>
         </div>
       </section>
@@ -88,20 +116,6 @@ export function WorkoutPage() {
           }}
         />
       ) : null}
-
-      <BodyWeightPanel date={date} value={detail?.bodyWeightLog?.bodyWeightKg ?? null} onSaved={reload} />
-
-      <section className="collection-section workout-log-section">
-        <div className="toolbar collection-header">
-          <h3>セット記録</h3>
-          <span className="badge">{detail?.exercises.length ?? 0} 種目</span>
-        </div>
-        {isLoading ? <EmptyState title="読み込み中" /> : null}
-        {!isLoading && detail?.exercises.length === 0 ? <EmptyState title="まだ種目がありません">種目またはメニューを追加してください。</EmptyState> : null}
-        {detail?.exercises.map((item) => (
-          <WorkoutExerciseCard key={item.workoutExercise.id} item={item} onChanged={reload} />
-        ))}
-      </section>
     </div>
   );
 }

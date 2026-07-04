@@ -645,6 +645,20 @@ textarea {
   box-shadow: 0 5px 16px rgba(23, 32, 42, 0.05);
 }
 
+.workout-add-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line-strong);
+}
+
+.workout-add-actions .button,
+.workout-add-actions .secondary-button {
+  min-width: 132px;
+}
+
 .workout-page .set-table {
   table-layout: fixed;
 }
@@ -976,6 +990,16 @@ textarea {
   .date-control {
     grid-template-columns: 40px minmax(0, 1fr) 40px;
     gap: 8px;
+  }
+
+  .workout-add-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .workout-add-actions > * {
+    width: 100%;
+    min-width: 0;
   }
 
   .picker-panel .list,
