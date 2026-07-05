@@ -1,8 +1,8 @@
-import { Archive, CheckCircle2, Pencil, Plus, RotateCcw, Save, X } from 'lucide-react';
+import { Archive, CheckCircle2, Pencil, Plus, RotateCcw, Save, Search, X } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 import { EmptyState } from '../../components/common/EmptyState';
 import { ScreenHeader } from '../../components/common/ScreenHeader';
-import type { BodyPart, EquipmentType, Exercise } from '../../domain/models';
+import type { BodyPart, EquipmentType, Exercise, ExercisePreset } from '../../domain/models';
 import { bodyPartLabels, equipmentTypeLabels } from '../../domain/rules';
 import { validateName } from '../../domain/validation';
 import { initializeDatabase } from '../../infrastructure/db/database';
@@ -16,6 +16,10 @@ interface ExerciseDraft {
   equipmentType: EquipmentType | null;
 }
 
+function normalizeSearchText(value: string) {
+  return value.trim().normalize('NFKC').toLocaleLowerCase('ja-JP');
+}
+
 export function ExercisesPage() {
   const [selectedPresetIds, setSelectedPresetIds] = useState<string[]>([]);
   const [recentExerciseIds, setRecentExerciseIds] = useState<string[]>([]);
@@ -24,6 +28,8 @@ export function ExercisesPage() {
   const [feedbackKind, setFeedbackKind] = useState<'success' | 'error'>('success');
   const [editingExercise, setEditingExercise] = useState<ExerciseDraft | null>(null);
   const [isUpdating, setUpdating] = useState(false);
+  const [presetSearchQuery, setPresetSearchQuery] = useState('');
+  const [presetBodyPart, setPresetBodyPart] = useState<BodyPart | 'all'>('all');
   const { data, isLoading, reload } = useAsyncData(async () => {
     await initializeDatabase();
     const [exercises, presets] = await Promise.all([exerciseRepository.listAll(), exerciseRepository.listPresets()]);
@@ -33,8 +39,14 @@ export function ExercisesPage() {
   const addedPresetIds = new Set(data?.exercises.map((exercise) => exercise.sourcePresetId).filter(Boolean));
   const activeExercises = data?.exercises.filter((exercise) => exercise.isActive) ?? [];
   const hiddenExercises = data?.exercises.filter((exercise) => !exercise.isActive) ?? [];
-  const availablePresets = data?.presets.filter((preset) => !addedPresetIds.has(preset.id)) ?? [];
-  const addedPresets = data?.presets.filter((preset) => addedPresetIds.has(preset.id)) ?? [];
+  const normalizedPresetSearch = normalizeSearchText(presetSearchQuery);
+  const matchesPresetFilter = (preset: ExercisePreset) =>
+    (!normalizedPresetSearch || normalizeSearchText(preset.name).includes(normalizedPresetSearch)) &&
+    (presetBodyPart === 'all' || preset.bodyPart === presetBodyPart);
+  const availablePresets = data?.presets.filter((preset) => !addedPresetIds.has(preset.id) && matchesPresetFilter(preset)) ?? [];
+  const addedPresets = data?.presets.filter((preset) => addedPresetIds.has(preset.id) && matchesPresetFilter(preset)) ?? [];
+  const isPresetFilterActive = Boolean(normalizedPresetSearch || presetBodyPart !== 'all');
+  const filteredPresetCount = availablePresets.length + addedPresets.length;
 
   async function createExercise(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -232,6 +244,46 @@ export function ExercisesPage() {
             選択した種目を追加
           </button>
         </div>
+        <div className="preset-filters" role="search" aria-label="プリセット種目を絞り込み">
+          <div className="field">
+            <label htmlFor="preset-search">種目名で検索</label>
+            <div className="preset-search-field">
+              <Search size={17} aria-hidden="true" />
+              <input
+                id="preset-search"
+                type="search"
+                value={presetSearchQuery}
+                placeholder="例: プレス"
+                onChange={(event) => setPresetSearchQuery(event.target.value)}
+              />
+              {presetSearchQuery ? (
+                <button
+                  className="preset-search-clear"
+                  type="button"
+                  title="検索語をクリア"
+                  aria-label="検索語をクリア"
+                  onClick={() => setPresetSearchQuery('')}
+                >
+                  <X size={16} aria-hidden="true" />
+                </button>
+              ) : null}
+            </div>
+          </div>
+          <div className="field">
+            <label htmlFor="preset-body-part">部位</label>
+            <select
+              id="preset-body-part"
+              value={presetBodyPart}
+              onChange={(event) => setPresetBodyPart(event.target.value as BodyPart | 'all')}
+            >
+              <option value="all">すべての部位</option>
+              {bodyPartOptions()}
+            </select>
+          </div>
+          <p className="preset-filter-result" aria-live="polite">
+            {isPresetFilterActive ? `${filteredPresetCount} 件が条件に一致` : `全 ${data?.presets.length ?? 0} 件`}
+          </p>
+        </div>
         <div className="list responsive-card-list">
           <div className="preset-group-heading">
             <h4>追加できる種目</h4>
@@ -260,6 +312,11 @@ export function ExercisesPage() {
               </label>
             );
           })}
+          {!isLoading && availablePresets.length === 0 ? (
+            <div className="preset-filter-empty">
+              <EmptyState title={isPresetFilterActive ? '条件に一致する未追加種目がありません' : '追加できる種目はありません'} />
+            </div>
+          ) : null}
           <div className="preset-group-heading is-added">
             <h4>追加済み</h4>
             <span>{addedPresets.length} 件</span>
@@ -275,6 +332,11 @@ export function ExercisesPage() {
               </span>
             </article>
           ))}
+          {!isLoading && addedPresets.length === 0 ? (
+            <div className="preset-filter-empty">
+              <EmptyState title={isPresetFilterActive ? '条件に一致する追加済み種目がありません' : '追加済みの種目はありません'} />
+            </div>
+          ) : null}
         </div>
       </section>
     </div>

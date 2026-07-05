@@ -468,6 +468,72 @@ textarea {
   border-bottom-color: #b9c3c1;
 }
 
+.preset-filters {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(180px, 1fr) auto;
+  align-items: end;
+  gap: 12px;
+  margin-bottom: 18px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel-2);
+}
+
+.preset-search-field {
+  position: relative;
+}
+
+.preset-search-field > svg {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  color: var(--muted);
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.preset-search-field input {
+  padding-right: 42px;
+  padding-left: 38px;
+}
+
+.preset-search-field input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.preset-search-clear {
+  position: absolute;
+  top: 50%;
+  right: 5px;
+  width: 34px;
+  min-height: 34px;
+  display: inline-grid;
+  place-items: center;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--muted);
+  transform: translateY(-50%);
+}
+
+.preset-search-clear:hover {
+  background: var(--accent-soft);
+  color: var(--accent-dark);
+}
+
+.preset-filter-result {
+  margin: 0 0 11px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.preset-filter-empty {
+  grid-column: 1 / -1;
+}
+
 .preset-group-heading {
   grid-column: 1 / -1;
   display: flex;
@@ -1169,6 +1235,15 @@ textarea {
 
   .preset-header .button {
     width: 100%;
+  }
+
+  .preset-filters {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .preset-filter-result {
+    margin: 0;
   }
 
   .exercise-page .list-item {
