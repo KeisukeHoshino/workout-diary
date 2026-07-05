@@ -96,7 +96,7 @@ button:disabled {
 
 .main-panel {
   min-width: 0;
-  width: min(1088px, 100%);
+  width: min(1400px, 100%);
   padding: 28px clamp(18px, 4vw, 48px) 40px;
 }
 
