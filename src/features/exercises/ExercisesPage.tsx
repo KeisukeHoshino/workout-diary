@@ -2,7 +2,7 @@ import { Archive, CheckCircle2, Plus, RotateCcw } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 import { EmptyState } from '../../components/common/EmptyState';
 import { ScreenHeader } from '../../components/common/ScreenHeader';
-import type { BodyPart, EquipmentType } from '../../domain/models';
+import type { BodyPart, EquipmentType, Exercise } from '../../domain/models';
 import { bodyPartLabels, equipmentTypeLabels } from '../../domain/rules';
 import { validateName } from '../../domain/validation';
 import { initializeDatabase } from '../../infrastructure/db/database';
@@ -22,6 +22,8 @@ export function ExercisesPage() {
   });
 
   const addedPresetIds = new Set(data?.exercises.map((exercise) => exercise.sourcePresetId).filter(Boolean));
+  const activeExercises = data?.exercises.filter((exercise) => exercise.isActive) ?? [];
+  const hiddenExercises = data?.exercises.filter((exercise) => !exercise.isActive) ?? [];
   const availablePresets = data?.presets.filter((preset) => !addedPresetIds.has(preset.id)) ?? [];
   const addedPresets = data?.presets.filter((preset) => addedPresetIds.has(preset.id)) ?? [];
 
@@ -53,6 +55,16 @@ export function ExercisesPage() {
       setFeedbackKind('error');
       setFeedback(error instanceof DuplicateExerciseNameError ? error.message : '種目を作成できませんでした。');
     }
+  }
+
+  async function changeExerciseVisibility(exercise: Exercise) {
+    const nextActive = !exercise.isActive;
+    await exerciseRepository.setActive(exercise.id, nextActive);
+    setRecentExerciseIds([]);
+    setRecentPresetIds([]);
+    setFeedbackKind('success');
+    setFeedback(`${exercise.name} を${nextActive ? '復元' : '非表示に'}しました。`);
+    reload();
   }
 
   return (
@@ -98,38 +110,42 @@ export function ExercisesPage() {
       <section className="collection-section">
         <div className="toolbar collection-header">
           <h3>一覧</h3>
-          <span className="badge">{data?.exercises.length ?? 0} 件</span>
+          <span className="badge">{activeExercises.length} 件</span>
         </div>
         {isLoading ? <EmptyState title="読み込み中" /> : null}
+        {!isLoading && activeExercises.length === 0 ? (
+          <EmptyState title="表示中の種目がありません">新しい種目を作成するか、非表示の種目を復元してください。</EmptyState>
+        ) : null}
         <div className="list responsive-card-list">
-          {data?.exercises.map((exercise) => (
-            <article
-              className={`list-item exercise-list-item ${exercise.isActive ? '' : 'is-inactive'} ${recentExerciseIds.includes(exercise.id) || (exercise.sourcePresetId && recentPresetIds.includes(exercise.sourcePresetId)) ? 'is-new' : ''}`}
+          {activeExercises.map((exercise) => (
+            <ExerciseCard
+              exercise={exercise}
+              isRecent={recentExerciseIds.includes(exercise.id) || Boolean(exercise.sourcePresetId && recentPresetIds.includes(exercise.sourcePresetId))}
               key={exercise.id}
-            >
-              <div className="list-item-top">
-                <div>
-                  <h3>{exercise.name}</h3>
-                  <p className="muted">
-                    {bodyPartLabels[exercise.bodyPart]} / {exercise.equipmentType ? equipmentTypeLabels[exercise.equipmentType] : '種別なし'}
-                    {exercise.isActive ? '' : ' / 非表示'}
-                  </p>
-                </div>
-                <button
-                  className={exercise.isActive ? 'danger-button' : 'secondary-button'}
-                  onClick={async () => {
-                    await exerciseRepository.setActive(exercise.id, !exercise.isActive);
-                    reload();
-                  }}
-                >
-                  {exercise.isActive ? <Archive size={16} /> : <RotateCcw size={16} />}
-                  {exercise.isActive ? '非表示' : '復元'}
-                </button>
-              </div>
-            </article>
+              onVisibilityChange={changeExerciseVisibility}
+            />
           ))}
         </div>
       </section>
+
+      {hiddenExercises.length ? (
+        <section className="collection-section hidden-exercise-section">
+          <div className="toolbar collection-header">
+            <h3>非表示の種目</h3>
+            <span className="badge">{hiddenExercises.length} 件</span>
+          </div>
+          <div className="list responsive-card-list">
+            {hiddenExercises.map((exercise) => (
+              <ExerciseCard
+                exercise={exercise}
+                isRecent={false}
+                key={exercise.id}
+                onVisibilityChange={changeExerciseVisibility}
+              />
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <section className="collection-section preset-section">
         <div className="toolbar collection-header preset-header">
@@ -199,6 +215,41 @@ export function ExercisesPage() {
         </div>
       </section>
     </div>
+  );
+}
+
+function ExerciseCard({
+  exercise,
+  isRecent,
+  onVisibilityChange,
+}: {
+  exercise: Exercise;
+  isRecent: boolean;
+  onVisibilityChange: (exercise: Exercise) => Promise<void>;
+}) {
+  return (
+    <article
+      className={`list-item exercise-list-item ${exercise.isActive ? '' : 'is-inactive'} ${isRecent ? 'is-new' : ''}`}
+      data-exercise-id={exercise.id}
+    >
+      <div className="list-item-top">
+        <div>
+          <h3>{exercise.name}</h3>
+          <p className="muted">
+            {bodyPartLabels[exercise.bodyPart]} / {exercise.equipmentType ? equipmentTypeLabels[exercise.equipmentType] : '種別なし'}
+            {exercise.isActive ? '' : ' / 非表示'}
+          </p>
+        </div>
+        <button
+          className={exercise.isActive ? 'danger-button' : 'secondary-button'}
+          type="button"
+          onClick={() => onVisibilityChange(exercise)}
+        >
+          {exercise.isActive ? <Archive size={16} aria-hidden="true" /> : <RotateCcw size={16} aria-hidden="true" />}
+          {exercise.isActive ? '非表示' : '復元'}
+        </button>
+      </div>
+    </article>
   );
 }
 

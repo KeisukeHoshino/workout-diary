@@ -412,6 +412,14 @@ textarea {
   color: #606d75;
 }
 
+.hidden-exercise-section {
+  padding-top: 4px;
+}
+
+.hidden-exercise-section .collection-header {
+  border-bottom-color: #b9c3c1;
+}
+
 .preset-group-heading {
   grid-column: 1 / -1;
   display: flex;
