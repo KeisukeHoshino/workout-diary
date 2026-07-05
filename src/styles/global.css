@@ -543,6 +543,12 @@ textarea {
   margin-top: 4px;
 }
 
+.preset-status {
+  width: fit-content;
+  justify-self: start;
+  white-space: nowrap;
+}
+
 .preset-status.is-pending {
   background: var(--accent-soft);
   color: var(--accent-dark);
