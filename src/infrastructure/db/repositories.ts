@@ -230,6 +230,30 @@ export const exerciseRepository = {
     return exercise;
   },
 
+  async update(id: string, input: { name: string; bodyPart: BodyPart; equipmentType: EquipmentType | null }) {
+    const [existing, all] = await Promise.all([db.exercises.get(id), db.exercises.toArray()]);
+    if (!existing) throw new Error('更新する種目が見つかりません。');
+
+    const normalizedName = normalizeExerciseName(input.name);
+    const normalizedExistingName = normalizeExerciseName(existing.name);
+    if (
+      normalizedName !== normalizedExistingName &&
+      all.some((exercise) => exercise.id !== id && normalizeExerciseName(exercise.name) === normalizedName)
+    ) {
+      throw new DuplicateExerciseNameError(input.name);
+    }
+
+    const updated = {
+      ...existing,
+      name: input.name,
+      bodyPart: input.bodyPart,
+      equipmentType: input.equipmentType,
+      updatedAt: now()
+    };
+    await db.exercises.put(updated);
+    return updated;
+  },
+
   async setActive(id: string, isActive: boolean) {
     const existing = await db.exercises.get(id);
     if (!existing) return;

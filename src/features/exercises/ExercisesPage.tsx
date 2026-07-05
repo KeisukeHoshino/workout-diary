@@ -1,4 +1,4 @@
-import { Archive, CheckCircle2, Plus, RotateCcw } from 'lucide-react';
+import { Archive, CheckCircle2, Pencil, Plus, RotateCcw, Save, X } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 import { EmptyState } from '../../components/common/EmptyState';
 import { ScreenHeader } from '../../components/common/ScreenHeader';
@@ -9,12 +9,21 @@ import { initializeDatabase } from '../../infrastructure/db/database';
 import { DuplicateExerciseNameError, exerciseRepository } from '../../infrastructure/db/repositories';
 import { useAsyncData } from '../shared/useAsyncData';
 
+interface ExerciseDraft {
+  id: string;
+  name: string;
+  bodyPart: BodyPart;
+  equipmentType: EquipmentType | null;
+}
+
 export function ExercisesPage() {
   const [selectedPresetIds, setSelectedPresetIds] = useState<string[]>([]);
   const [recentExerciseIds, setRecentExerciseIds] = useState<string[]>([]);
   const [recentPresetIds, setRecentPresetIds] = useState<string[]>([]);
   const [feedback, setFeedback] = useState('');
   const [feedbackKind, setFeedbackKind] = useState<'success' | 'error'>('success');
+  const [editingExercise, setEditingExercise] = useState<ExerciseDraft | null>(null);
+  const [isUpdating, setUpdating] = useState(false);
   const { data, isLoading, reload } = useAsyncData(async () => {
     await initializeDatabase();
     const [exercises, presets] = await Promise.all([exerciseRepository.listAll(), exerciseRepository.listPresets()]);
@@ -65,6 +74,48 @@ export function ExercisesPage() {
     setFeedbackKind('success');
     setFeedback(`${exercise.name} を${nextActive ? '復元' : '非表示に'}しました。`);
     reload();
+  }
+
+  function startEditingExercise(exercise: Exercise) {
+    setEditingExercise({
+      id: exercise.id,
+      name: exercise.name,
+      bodyPart: exercise.bodyPart,
+      equipmentType: exercise.equipmentType,
+    });
+    setFeedback('');
+  }
+
+  async function updateExercise(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!editingExercise) return;
+
+    const name = validateName(editingExercise.name);
+    if (!name) {
+      setFeedbackKind('error');
+      setFeedback('種目名は 1 から 40 文字で入力してください。');
+      return;
+    }
+
+    setUpdating(true);
+    try {
+      const updated = await exerciseRepository.update(editingExercise.id, {
+        name,
+        bodyPart: editingExercise.bodyPart,
+        equipmentType: editingExercise.equipmentType,
+      });
+      setEditingExercise(null);
+      setRecentExerciseIds([updated.id]);
+      setRecentPresetIds([]);
+      setFeedbackKind('success');
+      setFeedback(`${updated.name} を更新しました。`);
+      reload();
+    } catch (error) {
+      setFeedbackKind('error');
+      setFeedback(error instanceof DuplicateExerciseNameError ? error.message : '種目を更新できませんでした。');
+    } finally {
+      setUpdating(false);
+    }
   }
 
   return (
@@ -119,9 +170,15 @@ export function ExercisesPage() {
         <div className="list responsive-card-list">
           {activeExercises.map((exercise) => (
             <ExerciseCard
+              draft={editingExercise?.id === exercise.id ? editingExercise : null}
               exercise={exercise}
               isRecent={recentExerciseIds.includes(exercise.id) || Boolean(exercise.sourcePresetId && recentPresetIds.includes(exercise.sourcePresetId))}
+              isUpdating={isUpdating}
               key={exercise.id}
+              onCancelEditing={() => setEditingExercise(null)}
+              onDraftChange={setEditingExercise}
+              onSave={updateExercise}
+              onStartEditing={startEditingExercise}
               onVisibilityChange={changeExerciseVisibility}
             />
           ))}
@@ -137,9 +194,15 @@ export function ExercisesPage() {
           <div className="list responsive-card-list">
             {hiddenExercises.map((exercise) => (
               <ExerciseCard
+                draft={editingExercise?.id === exercise.id ? editingExercise : null}
                 exercise={exercise}
                 isRecent={false}
+                isUpdating={isUpdating}
                 key={exercise.id}
+                onCancelEditing={() => setEditingExercise(null)}
+                onDraftChange={setEditingExercise}
+                onSave={updateExercise}
+                onStartEditing={startEditingExercise}
                 onVisibilityChange={changeExerciseVisibility}
               />
             ))}
@@ -219,14 +282,91 @@ export function ExercisesPage() {
 }
 
 function ExerciseCard({
+  draft,
   exercise,
   isRecent,
+  isUpdating,
+  onCancelEditing,
+  onDraftChange,
+  onSave,
+  onStartEditing,
   onVisibilityChange,
 }: {
+  draft: ExerciseDraft | null;
   exercise: Exercise;
   isRecent: boolean;
+  isUpdating: boolean;
+  onCancelEditing: () => void;
+  onDraftChange: (draft: ExerciseDraft) => void;
+  onSave: (event: FormEvent<HTMLFormElement>) => Promise<void>;
+  onStartEditing: (exercise: Exercise) => void;
   onVisibilityChange: (exercise: Exercise) => Promise<void>;
 }) {
+  if (draft) {
+    return (
+      <article
+        className={`list-item exercise-list-item is-editing ${exercise.isActive ? '' : 'is-inactive'}`}
+        data-exercise-id={exercise.id}
+      >
+        <form className="exercise-edit-form" onSubmit={onSave}>
+          <div className="exercise-edit-heading">
+            <div>
+              <h3>種目を編集</h3>
+              <p className="muted">種目名、部位、種別を変更できます。</p>
+            </div>
+            {!exercise.isActive ? <span className="badge">非表示</span> : null}
+          </div>
+          <div className="grid-3">
+            <div className="field">
+              <label htmlFor={`exercise-name-${exercise.id}`}>種目名</label>
+              <input
+                id={`exercise-name-${exercise.id}`}
+                maxLength={40}
+                required
+                value={draft.name}
+                onChange={(event) => onDraftChange({ ...draft, name: event.target.value })}
+              />
+            </div>
+            <div className="field">
+              <label htmlFor={`exercise-body-part-${exercise.id}`}>部位</label>
+              <select
+                id={`exercise-body-part-${exercise.id}`}
+                value={draft.bodyPart}
+                onChange={(event) => onDraftChange({ ...draft, bodyPart: event.target.value as BodyPart })}
+              >
+                {bodyPartOptions()}
+              </select>
+            </div>
+            <div className="field">
+              <label htmlFor={`exercise-equipment-${exercise.id}`}>種別</label>
+              <select
+                id={`exercise-equipment-${exercise.id}`}
+                value={draft.equipmentType ?? ''}
+                onChange={(event) => onDraftChange({
+                  ...draft,
+                  equipmentType: (event.target.value || null) as EquipmentType | null,
+                })}
+              >
+                <option value="">なし</option>
+                {equipmentOptions()}
+              </select>
+            </div>
+          </div>
+          <div className="actions exercise-edit-actions">
+            <button className="secondary-button" type="button" disabled={isUpdating} onClick={onCancelEditing}>
+              <X size={16} aria-hidden="true" />
+              キャンセル
+            </button>
+            <button className="button" type="submit" disabled={isUpdating}>
+              <Save size={16} aria-hidden="true" />
+              {isUpdating ? '保存中...' : '変更を保存'}
+            </button>
+          </div>
+        </form>
+      </article>
+    );
+  }
+
   return (
     <article
       className={`list-item exercise-list-item ${exercise.isActive ? '' : 'is-inactive'} ${isRecent ? 'is-new' : ''}`}
@@ -240,14 +380,21 @@ function ExerciseCard({
             {exercise.isActive ? '' : ' / 非表示'}
           </p>
         </div>
-        <button
-          className={exercise.isActive ? 'danger-button' : 'secondary-button'}
-          type="button"
-          onClick={() => onVisibilityChange(exercise)}
-        >
-          {exercise.isActive ? <Archive size={16} aria-hidden="true" /> : <RotateCcw size={16} aria-hidden="true" />}
-          {exercise.isActive ? '非表示' : '復元'}
-        </button>
+        <div className="exercise-card-actions">
+          <button className="secondary-button" type="button" disabled={isUpdating} onClick={() => onStartEditing(exercise)}>
+            <Pencil size={16} aria-hidden="true" />
+            編集
+          </button>
+          <button
+            className={exercise.isActive ? 'danger-button' : 'secondary-button'}
+            type="button"
+            disabled={isUpdating}
+            onClick={() => onVisibilityChange(exercise)}
+          >
+            {exercise.isActive ? <Archive size={16} aria-hidden="true" /> : <RotateCcw size={16} aria-hidden="true" />}
+            {exercise.isActive ? '非表示' : '復元'}
+          </button>
+        </div>
       </div>
     </article>
   );
