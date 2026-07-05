@@ -17,7 +17,11 @@ interface ExerciseDraft {
 }
 
 function normalizeSearchText(value: string) {
-  return value.trim().normalize('NFKC').toLocaleLowerCase('ja-JP');
+  return value
+    .trim()
+    .normalize('NFKC')
+    .toLocaleLowerCase('ja-JP')
+    .replace(/[\u3041-\u3096]/g, (character) => String.fromCharCode(character.charCodeAt(0) + 0x60));
 }
 
 export function ExercisesPage() {
