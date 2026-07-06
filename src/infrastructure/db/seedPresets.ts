@@ -13,9 +13,9 @@ export const exercisePresets: ExercisePreset[] = [
   ['preset-shoulder-press', 'ショルダープレス', 'shoulders', 'dumbbell'],
   ['preset-side-raise', 'サイドレイズ', 'shoulders', 'dumbbell'],
   ['preset-face-pull', 'フェイスプル', 'shoulders', 'cable'],
-  ['preset-barbell-curl', 'バーベルカール', 'arms', 'barbell'],
-  ['preset-triceps-pushdown', 'トライセプスプッシュダウン', 'arms', 'cable'],
-  ['preset-dips', 'ディップス', 'arms', 'bodyweight'],
+  ['preset-barbell-curl', 'バーベルカール', 'biceps', 'barbell'],
+  ['preset-triceps-pushdown', 'トライセプスプッシュダウン', 'triceps', 'cable'],
+  ['preset-dips', 'ディップス', 'triceps', 'bodyweight'],
   ['preset-crunch', 'クランチ', 'abs', 'bodyweight'],
   ['preset-plank', 'プランク', 'abs', 'bodyweight'],
   ['preset-running', 'ランニング', 'cardio', 'other']

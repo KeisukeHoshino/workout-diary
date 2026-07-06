@@ -24,7 +24,7 @@ const databaseSchema = {
   menuTemplateExercises: 'id, menuTemplateId, exerciseId, [menuTemplateId+sortOrder]'
 };
 
-type LegacyBodyPart = Exercise['bodyPart'] | 'legs';
+type LegacyBodyPart = Exercise['bodyPart'] | 'legs' | 'arms';
 type LegacyExercise = Omit<Exercise, 'bodyPart'> & { bodyPart: LegacyBodyPart };
 type LegacyExercisePreset = Omit<ExercisePreset, 'bodyPart'> & { bodyPart: LegacyBodyPart };
 
@@ -48,6 +48,35 @@ function migratedLegBodyPart(name: string, sourcePresetId: string | null): Exerc
   return sourcePresetId === 'preset-leg-curl' || hamstringsKeywords.some((keyword) => normalizedName.includes(keyword))
     ? 'hamstrings'
     : 'quadriceps';
+}
+
+function migratedArmBodyPart(name: string, sourcePresetId: string | null): Exercise['bodyPart'] {
+  const normalizedName = name.trim().normalize('NFKC').toLocaleLowerCase('ja-JP');
+  const tricepsPresetIds = new Set(['preset-triceps-pushdown', 'preset-dips']);
+  const tricepsKeywords = [
+    '三頭',
+    'トライセプス',
+    'プッシュダウン',
+    'プレスダウン',
+    'スカルクラッシャー',
+    'フレンチプレス',
+    'キックバック',
+    'ディップス',
+    'ナロープレス',
+    'triceps',
+    'pushdown',
+    'pressdown',
+    'skull crusher',
+    'french press',
+    'kickback',
+    'dips',
+    'close grip'
+  ];
+
+  return (sourcePresetId && tricepsPresetIds.has(sourcePresetId)) ||
+    tricepsKeywords.some((keyword) => normalizedName.includes(keyword))
+    ? 'triceps'
+    : 'biceps';
 }
 
 export class WorkoutDiaryDatabase extends Dexie {
@@ -75,6 +104,20 @@ export class WorkoutDiaryDatabase extends Dexie {
       await transaction.table('exercises').toCollection().modify((exercise: LegacyExercise) => {
         if (exercise.bodyPart !== 'legs') return;
         exercise.bodyPart = migratedLegBodyPart(exercise.name, exercise.sourcePresetId);
+        exercise.updatedAt = timestamp;
+      });
+    });
+    this.version(3).stores(databaseSchema).upgrade(async (transaction) => {
+      const timestamp = new Date().toISOString();
+
+      await transaction.table('exercisePresets').toCollection().modify((preset: LegacyExercisePreset) => {
+        if (preset.bodyPart !== 'arms') return;
+        preset.bodyPart = migratedArmBodyPart(preset.name, preset.id);
+      });
+
+      await transaction.table('exercises').toCollection().modify((exercise: LegacyExercise) => {
+        if (exercise.bodyPart !== 'arms') return;
+        exercise.bodyPart = migratedArmBodyPart(exercise.name, exercise.sourcePresetId);
         exercise.updatedAt = timestamp;
       });
     });

@@ -6,7 +6,8 @@ export const bodyPartLabels: Record<BodyPart, string> = {
   quadriceps: '大腿四頭筋',
   hamstrings: 'ハムストリングス',
   shoulders: '肩',
-  arms: '腕',
+  biceps: '上腕二頭筋',
+  triceps: '上腕三頭筋',
   abs: '腹',
   cardio: '有酸素',
   other: 'その他'

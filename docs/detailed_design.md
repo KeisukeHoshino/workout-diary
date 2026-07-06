@@ -133,7 +133,8 @@ type BodyPart =
   | 'quadriceps'
   | 'hamstrings'
   | 'shoulders'
-  | 'arms'
+  | 'biceps'
+  | 'triceps'
   | 'abs'
   | 'cardio'
   | 'other';
@@ -247,6 +248,7 @@ interface MenuTemplateExercise {
 | --- | --- |
 | DB 名 | `workoutDiary` |
 | 初期バージョン | `1` |
+| 現在バージョン | `3` |
 | 初期投入 | `userSettings` と `exercisePresets` |
 
 ### 5.2 ストア定義
@@ -273,7 +275,13 @@ db.version(1).stores({
 2. `exercisePresets` が空であれば初期プリセットを投入する。
 3. プリセット追加済み判定は `Exercise.sourcePresetId` で行う。
 
-### 5.4 トランザクション方針
+### 5.4 データ移行
+
+- バージョン2で旧 `legs` を `quadriceps` または `hamstrings` へ移行する。
+- バージョン3で旧 `arms` を `biceps` または `triceps` へ移行する。
+- 部位の判定にはプリセットIDと種目名を使用し、過去記録から参照される `Exercise` 自体は維持する。
+
+### 5.5 トランザクション方針
 
 複数ストアを同時に更新する操作は Dexie の `transaction('rw', stores, callback)` でまとめる。
 

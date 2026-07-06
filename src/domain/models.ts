@@ -10,7 +10,8 @@ export type BodyPart =
   | 'quadriceps'
   | 'hamstrings'
   | 'shoulders'
-  | 'arms'
+  | 'biceps'
+  | 'triceps'
   | 'abs'
   | 'cardio'
   | 'other';
