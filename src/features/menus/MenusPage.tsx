@@ -1,8 +1,8 @@
-import { Pencil, Plus, Save, Trash2, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Pencil, Plus, Save, Trash2, X } from "lucide-react";
 import { FormEvent, useState } from "react";
 import { EmptyState } from "../../components/common/EmptyState";
 import { ScreenHeader } from "../../components/common/ScreenHeader";
-import type { MenuTemplateDetail } from "../../domain/models";
+import type { Exercise, MenuTemplateDetail } from "../../domain/models";
 import { validateName } from "../../domain/validation";
 import { initializeDatabase } from "../../infrastructure/db/database";
 import {
@@ -16,6 +16,14 @@ interface MenuDraft {
   name: string;
   memo: string;
   exerciseIds: string[];
+}
+
+function moveItem<T>(items: T[], fromIndex: number, toIndex: number) {
+  if (toIndex < 0 || toIndex >= items.length) return items;
+  const next = [...items];
+  const [item] = next.splice(fromIndex, 1);
+  next.splice(toIndex, 0, item);
+  return next;
 }
 
 export function MenusPage() {
@@ -89,6 +97,21 @@ export function MenusPage() {
     });
   }
 
+  function reorderSelectedExercise(index: number, direction: -1 | 1) {
+    setSelectedExerciseIds((current) => moveItem(current, index, index + direction));
+  }
+
+  function reorderEditingExercise(index: number, direction: -1 | 1) {
+    setEditingMenu((current) =>
+      current
+        ? {
+            ...current,
+            exerciseIds: moveItem(current.exerciseIds, index, index + direction),
+          }
+        : current,
+    );
+  }
+
   async function updateMenu(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!editingMenu) return;
@@ -154,29 +177,36 @@ export function MenusPage() {
             <span className="badge">{selectedExerciseIds.length} 件選択中</span>
           </div>
           {data?.exercises.length ? (
-            <div className="menu-exercise-grid">
-              {data.exercises.map((exercise) => (
-                <label
-                  className={`menu-exercise-option ${selectedExerciseIds.includes(exercise.id) ? "is-selected" : ""}`}
-                  key={exercise.id}
-                >
-                  <input
-                    type="checkbox"
-                    name="exerciseIds"
-                    value={exercise.id}
-                    checked={selectedExerciseIds.includes(exercise.id)}
-                    onChange={(event) => {
-                      setSelectedExerciseIds((current) =>
-                        event.target.checked
-                          ? [...current, exercise.id]
-                          : current.filter((id) => id !== exercise.id),
-                      );
-                    }}
-                  />
-                  {exercise.name}
-                </label>
-              ))}
-            </div>
+            <>
+              <div className="menu-exercise-grid">
+                {data.exercises.map((exercise) => (
+                  <label
+                    className={`menu-exercise-option ${selectedExerciseIds.includes(exercise.id) ? "is-selected" : ""}`}
+                    key={exercise.id}
+                  >
+                    <input
+                      type="checkbox"
+                      name="exerciseIds"
+                      value={exercise.id}
+                      checked={selectedExerciseIds.includes(exercise.id)}
+                      onChange={(event) => {
+                        setSelectedExerciseIds((current) =>
+                          event.target.checked
+                            ? [...current, exercise.id]
+                            : current.filter((id) => id !== exercise.id),
+                        );
+                      }}
+                    />
+                    {exercise.name}
+                  </label>
+                ))}
+              </div>
+              <SelectedExerciseOrder
+                exerciseIds={selectedExerciseIds}
+                exercises={data.exercises}
+                onMove={reorderSelectedExercise}
+              />
+            </>
           ) : (
             <EmptyState title="利用できる種目がありません">
               先にマイ種目を追加してください。
@@ -280,6 +310,11 @@ export function MenusPage() {
                         );
                       })}
                     </div>
+                    <SelectedExerciseOrder
+                      exerciseIds={editingMenu.exerciseIds}
+                      exercises={data.exercises}
+                      onMove={reorderEditingExercise}
+                    />
                     {editMessage ? (
                       <p className="status-message is-error" aria-live="polite">
                         {editMessage}
@@ -346,6 +381,61 @@ export function MenusPage() {
           })}
         </div>
       </section>
+    </div>
+  );
+}
+
+function SelectedExerciseOrder({
+  exerciseIds,
+  exercises,
+  onMove,
+}: {
+  exerciseIds: string[];
+  exercises: Exercise[];
+  onMove: (index: number, direction: -1 | 1) => void;
+}) {
+  const selectedExercises = exerciseIds
+    .map((exerciseId) => exercises.find((exercise) => exercise.id === exerciseId))
+    .filter((exercise): exercise is Exercise => Boolean(exercise));
+
+  if (!selectedExercises.length) return null;
+
+  return (
+    <div className="menu-selected-order" aria-label="メニュー内種目の並び順">
+      <div className="toolbar">
+        <div className="label">並び順</div>
+        <span className="badge">上から記録に追加</span>
+      </div>
+      <ol className="menu-order-list">
+        {selectedExercises.map((exercise, index) => (
+          <li className="menu-order-item" key={exercise.id}>
+            <span className="menu-order-number">{index + 1}</span>
+            <span className="menu-order-name">{exercise.name}</span>
+            <div className="menu-order-actions" aria-label={`${exercise.name}の並び順操作`}>
+              <button
+                className="icon-button"
+                type="button"
+                disabled={index === 0}
+                onClick={() => onMove(index, -1)}
+                aria-label={`${exercise.name}を上へ移動`}
+                title="上へ移動"
+              >
+                <ArrowUp size={16} aria-hidden="true" />
+              </button>
+              <button
+                className="icon-button"
+                type="button"
+                disabled={index === selectedExercises.length - 1}
+                onClick={() => onMove(index, 1)}
+                aria-label={`${exercise.name}を下へ移動`}
+                title="下へ移動"
+              >
+                <ArrowDown size={16} aria-hidden="true" />
+              </button>
+            </div>
+          </li>
+        ))}
+      </ol>
     </div>
   );
 }

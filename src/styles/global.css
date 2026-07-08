@@ -894,6 +894,65 @@ textarea {
   box-shadow: inset 4px 0 0 var(--accent);
 }
 
+.menu-selected-order {
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid #c9d6d3;
+  border-radius: var(--radius);
+  background: #f8fcfb;
+}
+
+.menu-selected-order .toolbar {
+  margin-bottom: 10px;
+}
+
+.menu-order-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.menu-order-item {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 7px 8px 7px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+}
+
+.menu-order-number {
+  width: 28px;
+  height: 28px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-dark);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.menu-order-name {
+  min-width: 0;
+  font-weight: 900;
+  overflow-wrap: anywhere;
+}
+
+.menu-order-actions {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.menu-order-actions .icon-button:disabled {
+  opacity: 0.4;
+}
+
 .menu-list {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
@@ -1138,6 +1197,14 @@ textarea {
 
   .menu-exercise-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .menu-selected-order {
+    padding: 12px;
+  }
+
+  .menu-order-item {
+    grid-template-columns: 28px minmax(0, 1fr) auto;
   }
 
   .menu-list-item.is-editing {
