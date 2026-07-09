@@ -132,7 +132,9 @@ type BodyPart =
   | 'back'
   | 'quadriceps'
   | 'hamstrings'
-  | 'shoulders'
+  | 'frontDelts'
+  | 'sideDelts'
+  | 'rearDelts'
   | 'biceps'
   | 'triceps'
   | 'abs'
@@ -248,7 +250,7 @@ interface MenuTemplateExercise {
 | --- | --- |
 | DB 名 | `workoutDiary` |
 | 初期バージョン | `1` |
-| 現在バージョン | `3` |
+| 現在バージョン | `4` |
 | 初期投入 | `userSettings` と `exercisePresets` |
 
 ### 5.2 ストア定義
@@ -279,6 +281,7 @@ db.version(1).stores({
 
 - バージョン2で旧 `legs` を `quadriceps` または `hamstrings` へ移行する。
 - バージョン3で旧 `arms` を `biceps` または `triceps` へ移行する。
+- バージョン4で旧 `shoulders` を `frontDelts`、`sideDelts`、`rearDelts` へ移行する。
 - 部位の判定にはプリセットIDと種目名を使用し、過去記録から参照される `Exercise` 自体は維持する。
 
 ### 5.5 トランザクション方針
