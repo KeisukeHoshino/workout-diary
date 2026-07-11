@@ -267,18 +267,47 @@ function SetRow({ set, onChanged }: { set: WorkoutDetail['exercises'][number]['s
     onChanged();
   };
 
+  const adjustWeight = async (delta: number) => {
+    const currentWeight = parseNullableNumber(weight, 0, 999.9);
+    if (currentWeight === undefined) return;
+    const baseWeight = currentWeight ?? 0;
+    const nextWeight = Math.min(999.9, Math.max(0, baseWeight + delta));
+    const nextWeightText = nextWeight.toString();
+    setWeight(nextWeightText);
+    await save(nextWeightText);
+  };
+
   return (
     <tr>
       <td>{set.setNumber}</td>
       <td>
-        <input
-          type="number"
-          inputMode="decimal"
-          value={weight}
-          placeholder={formatKg(null)}
-          onChange={(event) => setWeight(event.target.value)}
-          onBlur={() => save()}
-        />
+        <div className="weight-input-group">
+          <button
+            className="weight-step-button"
+            type="button"
+            aria-label={`${set.setNumber}セット目の重量を2.5kg下げる`}
+            onClick={() => adjustWeight(-2.5)}
+          >
+            -2.5
+          </button>
+          <input
+            type="number"
+            inputMode="decimal"
+            step="0.1"
+            value={weight}
+            placeholder={formatKg(null)}
+            onChange={(event) => setWeight(event.target.value)}
+            onBlur={() => save()}
+          />
+          <button
+            className="weight-step-button"
+            type="button"
+            aria-label={`${set.setNumber}セット目の重量を2.5kg上げる`}
+            onClick={() => adjustWeight(2.5)}
+          >
+            +2.5
+          </button>
+        </div>
       </td>
       <td>
         <input

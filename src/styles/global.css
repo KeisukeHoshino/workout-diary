@@ -805,6 +805,31 @@ textarea {
   min-width: 0;
 }
 
+.weight-input-group {
+  display: grid;
+  grid-template-columns: minmax(48px, 0.75fr) minmax(72px, 1fr) minmax(48px, 0.75fr);
+  align-items: center;
+  gap: 6px;
+}
+
+.weight-step-button {
+  min-width: 0;
+  min-height: 38px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  padding: 0 8px;
+  background: var(--panel-2);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.weight-step-button:hover {
+  border-color: #82bdb7;
+  background: var(--accent-soft);
+}
+
 .graph-panel {
   padding: 24px;
   border-color: #c9d6d3;
@@ -1268,6 +1293,17 @@ textarea {
 
   .workout-page .set-table input {
     padding: 7px 6px;
+  }
+
+  .weight-input-group {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .weight-step-button {
+    min-height: 32px;
+    padding: 0 4px;
+    font-size: 11px;
   }
 
   .exercise-create-panel {
