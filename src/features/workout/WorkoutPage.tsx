@@ -1,6 +1,6 @@
 import { ChevronLeft, ChevronRight, ListPlus, Plus, Trash2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { EmptyState } from '../../components/common/EmptyState';
 import { ScreenHeader } from '../../components/common/ScreenHeader';
 import type { Exercise, LocalDateString, MenuTemplateDetail, WorkoutDetail } from '../../domain/models';
@@ -135,6 +135,16 @@ function PickerPanel({ exercises, onChoose }: { exercises: Exercise[]; onChoose:
             </span>
           </button>
         ))}
+      </div>
+      <div className="picker-panel-actions">
+        <Link className="secondary-button" to="/exercises#create">
+          <Plus size={16} aria-hidden="true" />
+          新規作成
+        </Link>
+        <Link className="button" to="/exercises#presets">
+          <ListPlus size={16} aria-hidden="true" />
+          プリセット追加
+        </Link>
       </div>
     </section>
   );

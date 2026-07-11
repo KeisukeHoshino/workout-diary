@@ -162,6 +162,12 @@ button:disabled {
   box-shadow: 0 10px 28px rgba(23, 32, 42, 0.06);
 }
 
+.exercise-create-panel.is-anchor-target,
+.preset-section.is-anchor-target {
+  border-color: var(--accent);
+  box-shadow: inset 4px 0 0 var(--accent), 0 10px 28px rgba(23, 32, 42, 0.06);
+}
+
 .app-page .button,
 .app-page .danger-button,
 .app-page .secondary-button {
@@ -768,6 +774,19 @@ textarea {
   text-align: left;
 }
 
+.picker-panel-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line-strong);
+}
+
+.picker-panel-actions > * {
+  min-width: 132px;
+}
+
 .workout-log-section .card {
   border-color: #c7d2d0;
   box-shadow: 0 5px 16px rgba(23, 32, 42, 0.05);
@@ -1210,6 +1229,16 @@ textarea {
   }
 
   .workout-add-actions > * {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .picker-panel-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .picker-panel-actions > * {
     width: 100%;
     min-width: 0;
   }

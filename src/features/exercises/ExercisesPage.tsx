@@ -1,5 +1,6 @@
 import { Archive, CheckCircle2, Pencil, Plus, RotateCcw, Save, Search, X } from 'lucide-react';
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { EmptyState } from '../../components/common/EmptyState';
 import { ScreenHeader } from '../../components/common/ScreenHeader';
 import type { BodyPart, EquipmentType, Exercise, ExercisePreset } from '../../domain/models';
@@ -25,6 +26,7 @@ function normalizeSearchText(value: string) {
 }
 
 export function ExercisesPage() {
+  const location = useLocation();
   const [selectedPresetIds, setSelectedPresetIds] = useState<string[]>([]);
   const [recentExerciseIds, setRecentExerciseIds] = useState<string[]>([]);
   const [recentPresetIds, setRecentPresetIds] = useState<string[]>([]);
@@ -51,6 +53,13 @@ export function ExercisesPage() {
   const addedPresets = data?.presets.filter((preset) => addedPresetIds.has(preset.id) && matchesPresetFilter(preset)) ?? [];
   const isPresetFilterActive = Boolean(normalizedPresetSearch || presetBodyPart !== 'all');
   const filteredPresetCount = availablePresets.length + addedPresets.length;
+  const highlightedSection = location.hash === '#create' || location.hash === '#presets' ? location.hash.slice(1) : '';
+
+  useEffect(() => {
+    if (!highlightedSection) return;
+    const target = document.getElementById(highlightedSection);
+    target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [highlightedSection]);
 
   async function createExercise(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -143,7 +152,11 @@ export function ExercisesPage() {
           <span>{feedback}</span>
         </div>
       ) : null}
-      <section className="panel exercise-create-panel">
+      <section
+        id="create"
+        className={`panel exercise-create-panel ${highlightedSection === 'create' ? 'is-anchor-target' : ''}`}
+        tabIndex={-1}
+      >
         <div className="section-heading">
           <h3>新しい種目</h3>
         </div>
@@ -226,7 +239,11 @@ export function ExercisesPage() {
         </section>
       ) : null}
 
-      <section className="collection-section preset-section">
+      <section
+        id="presets"
+        className={`collection-section preset-section ${highlightedSection === 'presets' ? 'is-anchor-target' : ''}`}
+        tabIndex={-1}
+      >
         <div className="toolbar collection-header preset-header">
           <h3>プリセット追加</h3>
           <button
