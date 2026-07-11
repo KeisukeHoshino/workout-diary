@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight, ListPlus, Plus, Trash2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { EmptyState } from '../../components/common/EmptyState';
 import { ScreenHeader } from '../../components/common/ScreenHeader';
@@ -253,27 +253,47 @@ function WorkoutExerciseCard({ item, onChanged }: { item: WorkoutDetail['exercis
 function SetRow({ set, onChanged }: { set: WorkoutDetail['exercises'][number]['sets'][number]; onChanged: () => void }) {
   const [weight, setWeight] = useState(set.weightKg?.toString() ?? '');
   const [reps, setReps] = useState(set.reps?.toString() ?? '');
+  const weightRef = useRef(weight);
+  const repsRef = useRef(reps);
+  const saveQueueRef = useRef(Promise.resolve());
 
   useEffect(() => {
-    setWeight(set.weightKg?.toString() ?? '');
-    setReps(set.reps?.toString() ?? '');
+    const nextWeight = set.weightKg?.toString() ?? '';
+    const nextReps = set.reps?.toString() ?? '';
+    setWeight(nextWeight);
+    setReps(nextReps);
+    weightRef.current = nextWeight;
+    repsRef.current = nextReps;
   }, [set.id, set.weightKg, set.reps]);
 
-  const save = async (nextWeight = weight, nextReps = reps) => {
+  const updateWeight = (nextWeight: string) => {
+    weightRef.current = nextWeight;
+    setWeight(nextWeight);
+  };
+
+  const updateReps = (nextReps: string) => {
+    repsRef.current = nextReps;
+    setReps(nextReps);
+  };
+
+  const save = (nextWeight = weightRef.current, nextReps = repsRef.current) => {
     const weightKg = parseNullableNumber(nextWeight, 0, 999.9);
     const parsedReps = parseNullableNumber(nextReps, 1, 999);
-    if (weightKg === undefined || parsedReps === undefined) return;
-    await workoutRepository.updateSet(set.id, { weightKg, reps: parsedReps });
-    onChanged();
+    if (weightKg === undefined || parsedReps === undefined) return Promise.resolve();
+
+    saveQueueRef.current = saveQueueRef.current.then(() =>
+      workoutRepository.updateSet(set.id, { weightKg, reps: parsedReps }),
+    );
+    return saveQueueRef.current;
   };
 
   const adjustWeight = async (delta: number) => {
-    const currentWeight = parseNullableNumber(weight, 0, 999.9);
+    const currentWeight = parseNullableNumber(weightRef.current, 0, 999.9);
     if (currentWeight === undefined) return;
     const baseWeight = currentWeight ?? 0;
-    const nextWeight = Math.min(999.9, Math.max(0, baseWeight + delta));
+    const nextWeight = Math.round(Math.min(999.9, Math.max(0, baseWeight + delta)) * 10) / 10;
     const nextWeightText = nextWeight.toString();
-    setWeight(nextWeightText);
+    updateWeight(nextWeightText);
     await save(nextWeightText);
   };
 
@@ -296,7 +316,7 @@ function SetRow({ set, onChanged }: { set: WorkoutDetail['exercises'][number]['s
             step="0.1"
             value={weight}
             placeholder={formatKg(null)}
-            onChange={(event) => setWeight(event.target.value)}
+            onChange={(event) => updateWeight(event.target.value)}
             onBlur={() => save()}
           />
           <button
@@ -314,7 +334,7 @@ function SetRow({ set, onChanged }: { set: WorkoutDetail['exercises'][number]['s
           type="number"
           inputMode="numeric"
           value={reps}
-          onChange={(event) => setReps(event.target.value)}
+          onChange={(event) => updateReps(event.target.value)}
           onBlur={() => save()}
         />
       </td>
