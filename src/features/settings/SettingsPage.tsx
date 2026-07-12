@@ -1,6 +1,7 @@
 import { CheckCircle2, Download, Share2, Trash2, Upload } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { settingsUseCases } from '../../application/appServices';
+import { runtimeConfig } from '../../config/runtime';
 import { ScreenHeader } from '../../components/common/ScreenHeader';
 import type { GraphRange } from '../../domain/models';
 import { graphRangeLabels } from '../../domain/rules';
@@ -83,6 +84,7 @@ export function SettingsPage() {
                 {installMessage}
               </p>
             ) : null}
+            <p className="muted">バージョン {runtimeConfig.appVersion} ({runtimeConfig.commitSha})</p>
           </div>
           <div className="install-actions">
             {installStatus === 'available' ? (
