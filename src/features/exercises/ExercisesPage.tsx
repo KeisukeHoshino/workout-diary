@@ -1,13 +1,13 @@
 import { Archive, CheckCircle2, Pencil, Plus, RotateCcw, Save, Search, X } from 'lucide-react';
 import { FormEvent, useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
+import { exerciseUseCases } from '../../application/appServices';
 import { EmptyState } from '../../components/common/EmptyState';
 import { ScreenHeader } from '../../components/common/ScreenHeader';
 import type { BodyPart, EquipmentType, Exercise, ExercisePreset } from '../../domain/models';
+import { DuplicateExerciseNameError } from '../../domain/errors';
 import { bodyPartLabels, equipmentTypeLabels } from '../../domain/rules';
 import { validateName } from '../../domain/validation';
-import { initializeDatabase } from '../../infrastructure/db/database';
-import { DuplicateExerciseNameError, exerciseRepository } from '../../infrastructure/db/repositories';
 import { useAsyncData } from '../shared/useAsyncData';
 
 interface ExerciseDraft {
@@ -37,8 +37,8 @@ export function ExercisesPage() {
   const [presetSearchQuery, setPresetSearchQuery] = useState('');
   const [presetBodyPart, setPresetBodyPart] = useState<BodyPart | 'all'>('all');
   const { data, isLoading, reload } = useAsyncData(async () => {
-    await initializeDatabase();
-    const [exercises, presets] = await Promise.all([exerciseRepository.listAll(), exerciseRepository.listPresets()]);
+    await exerciseUseCases.initialize();
+    const [exercises, presets] = await Promise.all([exerciseUseCases.listAll(), exerciseUseCases.listPresets()]);
     return { exercises, presets };
   });
 
@@ -72,7 +72,7 @@ export function ExercisesPage() {
       return;
     }
     try {
-      const exercise = await exerciseRepository.create({
+      const exercise = await exerciseUseCases.create({
         name,
         bodyPart: form.get('bodyPart') as BodyPart,
         equipmentType: (form.get('equipmentType') || null) as EquipmentType | null
@@ -93,7 +93,7 @@ export function ExercisesPage() {
 
   async function changeExerciseVisibility(exercise: Exercise) {
     const nextActive = !exercise.isActive;
-    await exerciseRepository.setActive(exercise.id, nextActive);
+    await exerciseUseCases.setActive(exercise.id, nextActive);
     setRecentExerciseIds([]);
     setRecentPresetIds([]);
     setFeedbackKind('success');
@@ -124,7 +124,7 @@ export function ExercisesPage() {
 
     setUpdating(true);
     try {
-      const updated = await exerciseRepository.update(editingExercise.id, {
+      const updated = await exerciseUseCases.update(editingExercise.id, {
         name,
         bodyPart: editingExercise.bodyPart,
         equipmentType: editingExercise.equipmentType,
@@ -251,7 +251,7 @@ export function ExercisesPage() {
             disabled={!selectedPresetIds.length}
             onClick={async () => {
               const presetIds = selectedPresetIds;
-              const result = await exerciseRepository.addFromPresets(presetIds);
+              const result = await exerciseUseCases.addFromPresets(presetIds);
               setSelectedPresetIds([]);
               setRecentExerciseIds([]);
               setRecentPresetIds(presetIds);
