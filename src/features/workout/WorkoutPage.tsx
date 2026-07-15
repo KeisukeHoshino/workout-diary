@@ -1,12 +1,18 @@
 import { ChevronLeft, ChevronRight, ListPlus, Plus, Trash2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { workoutUseCases } from '../../application/appServices';
 import { EmptyState } from '../../components/common/EmptyState';
 import { ScreenHeader } from '../../components/common/ScreenHeader';
 import type { Exercise, LocalDateString, MenuTemplateDetail, WorkoutDetail } from '../../domain/models';
 import { addDays, bodyPartLabels, dateLabel, equipmentTypeLabels, formatKg, localDate } from '../../domain/rules';
 import { parseNullableNumber } from '../../domain/validation';
+import {
+  bodyWeightRepository,
+  exerciseRepository,
+  menuRepository,
+  workoutRepository
+} from '../../infrastructure/db/repositories';
+import { initializeDatabase } from '../../infrastructure/db/database';
 import { useAsyncData } from '../shared/useAsyncData';
 
 export function WorkoutPage() {
@@ -15,8 +21,13 @@ export function WorkoutPage() {
   const [exercisePickerOpen, setExercisePickerOpen] = useState(false);
   const [menuPickerOpen, setMenuPickerOpen] = useState(false);
   const { data, isLoading, reload } = useAsyncData(async () => {
-    const loaded = await workoutUseCases.load(date);
-    return { detail: loaded.workout, exercises: loaded.exercises, menus: loaded.menus };
+    await initializeDatabase();
+    const [detail, exercises, menus] = await Promise.all([
+      workoutRepository.getWorkoutByDate(date),
+      exerciseRepository.listActive(),
+      menuRepository.list()
+    ]);
+    return { detail, exercises, menus };
   }, [date]);
 
   const changeDate = (nextDate: LocalDateString) => {
@@ -88,7 +99,7 @@ export function WorkoutPage() {
         <PickerPanel
           exercises={data.exercises}
           onChoose={async (exerciseId) => {
-            await workoutUseCases.addExercise(date, exerciseId);
+            await workoutRepository.addExerciseToDate(date, exerciseId);
             setExercisePickerOpen(false);
             reload();
           }}
@@ -99,7 +110,7 @@ export function WorkoutPage() {
         <MenuPickerPanel
           menus={data.menus}
           onChoose={async (menuId) => {
-            await workoutUseCases.addMenu(date, menuId);
+            await workoutRepository.addMenuToDate(date, menuId);
             setMenuPickerOpen(false);
             reload();
           }}
@@ -187,7 +198,7 @@ function BodyWeightPanel({ date, value, onSaved }: { date: LocalDateString; valu
             onBlur={async () => {
               const parsed = parseNullableNumber(draft, 0, 999.9);
               if (parsed === undefined) return;
-              await workoutUseCases.updateBodyWeight(date, parsed);
+              await bodyWeightRepository.upsert(date, parsed);
               onSaved();
             }}
           />
@@ -212,7 +223,7 @@ function WorkoutExerciseCard({ item, onChanged }: { item: WorkoutDetail['exercis
           className="danger-button"
           onClick={async () => {
             if (!confirm('この種目カードを削除しますか？')) return;
-            await workoutUseCases.deleteExercise(item.workoutExercise.id);
+            await workoutRepository.deleteWorkoutExercise(item.workoutExercise.id);
             onChanged();
           }}
         >
@@ -238,7 +249,7 @@ function WorkoutExerciseCard({ item, onChanged }: { item: WorkoutDetail['exercis
         <button
           className="secondary-button"
           onClick={async () => {
-            await workoutUseCases.addSet(item.workoutExercise.id);
+            await workoutRepository.addSet(item.workoutExercise.id);
             onChanged();
           }}
         >
@@ -281,7 +292,7 @@ function SetRow({ set, onChanged }: { set: WorkoutDetail['exercises'][number]['s
     if (weightKg === undefined || parsedReps === undefined) return Promise.resolve();
 
     saveQueueRef.current = saveQueueRef.current.then(() =>
-      workoutUseCases.updateSet(set.id, { weightKg, reps: parsedReps }),
+      workoutRepository.updateSet(set.id, { weightKg, reps: parsedReps }),
     );
     return saveQueueRef.current;
   };
@@ -343,7 +354,7 @@ function SetRow({ set, onChanged }: { set: WorkoutDetail['exercises'][number]['s
           title="セット削除"
           onClick={async () => {
             if (!confirm('このセットを削除しますか？')) return;
-            await workoutUseCases.deleteSet(set.id);
+            await workoutRepository.deleteSet(set.id);
             onChanged();
           }}
         >

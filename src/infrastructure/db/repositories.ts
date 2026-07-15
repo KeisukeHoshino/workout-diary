@@ -8,7 +8,6 @@ import type {
   WorkoutDetail
 } from '../../domain/models';
 import { aggregateBodyWeightPoints, aggregateMaxWeightPoints } from '../../domain/graphAggregation';
-import { DuplicateExerciseNameError } from '../../domain/errors';
 import { uuid } from '../../domain/rules';
 import { db } from './database';
 
@@ -18,6 +17,13 @@ function now() {
 
 function normalizeExerciseName(name: string) {
   return name.trim().normalize('NFKC').toLocaleLowerCase('ja-JP');
+}
+
+export class DuplicateExerciseNameError extends Error {
+  constructor(name: string) {
+    super(`${name} はすでにマイ種目に登録されています。`);
+    this.name = 'DuplicateExerciseNameError';
+  }
 }
 
 async function ensureWorkoutDay(date: LocalDateString) {

@@ -1,10 +1,14 @@
 import { ArrowDown, ArrowUp, Pencil, Plus, Save, Trash2, X } from "lucide-react";
 import { FormEvent, useState } from "react";
-import { menuUseCases } from "../../application/appServices";
 import { EmptyState } from "../../components/common/EmptyState";
 import { ScreenHeader } from "../../components/common/ScreenHeader";
 import type { Exercise, MenuTemplateDetail } from "../../domain/models";
 import { validateName } from "../../domain/validation";
+import { initializeDatabase } from "../../infrastructure/db/database";
+import {
+  exerciseRepository,
+  menuRepository,
+} from "../../infrastructure/db/repositories";
 import { useAsyncData } from "../shared/useAsyncData";
 
 interface MenuDraft {
@@ -31,10 +35,10 @@ export function MenusPage() {
   const [isSubmitting, setSubmitting] = useState(false);
   const [isUpdating, setUpdating] = useState(false);
   const { data, reload } = useAsyncData(async () => {
-    await menuUseCases.initialize();
+    await initializeDatabase();
     const [menus, exercises] = await Promise.all([
-      menuUseCases.list(),
-      menuUseCases.listExercises(),
+      menuRepository.list(),
+      exerciseRepository.listActive(),
     ]);
     return { menus, exercises };
   });
@@ -56,7 +60,7 @@ export function MenusPage() {
 
     setSubmitting(true);
     try {
-      await menuUseCases.create({
+      await menuRepository.create({
         name,
         memo: String(form.get("memo") ?? "").slice(0, 500),
         exerciseIds: selectedExerciseIds,
@@ -125,7 +129,7 @@ export function MenusPage() {
 
     setUpdating(true);
     try {
-      await menuUseCases.update(editingMenu.id, {
+      await menuRepository.update(editingMenu.id, {
         name,
         memo: editingMenu.memo.slice(0, 500),
         exerciseIds: editingMenu.exerciseIds,
@@ -360,7 +364,7 @@ export function MenusPage() {
                         disabled={isUpdating}
                         onClick={async () => {
                           if (!confirm("このメニューを削除しますか？")) return;
-                          await menuUseCases.delete(item.menu.id);
+                          await menuRepository.delete(item.menu.id);
                           if (editingMenu?.id === item.menu.id) setEditingMenu(null);
                           setLibraryMessage("メニューを削除しました。");
                           reload();

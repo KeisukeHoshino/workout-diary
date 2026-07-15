@@ -12,7 +12,7 @@ import type {
 } from '../../domain/models';
 import { exercisePresets } from './seedPresets';
 
-export const databaseSchema = {
+const databaseSchema = {
   userSettings: 'id',
   exercisePresets: 'id, bodyPart, name, sortOrder',
   exercises: 'id, bodyPart, isActive, sourcePresetId, sortOrder, updatedAt',
@@ -131,8 +131,8 @@ export class WorkoutDiaryDatabase extends Dexie {
   menuTemplates!: EntityTable<MenuTemplate, 'id'>;
   menuTemplateExercises!: EntityTable<MenuTemplateExercise, 'id'>;
 
-  constructor(name = 'workoutDiary') {
-    super(name);
+  constructor() {
+    super('workoutDiary');
     this.version(1).stores(databaseSchema);
     this.version(2).stores(databaseSchema).upgrade(async (transaction) => {
       const timestamp = new Date().toISOString();
