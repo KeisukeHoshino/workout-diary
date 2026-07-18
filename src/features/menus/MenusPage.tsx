@@ -1,6 +1,7 @@
 import { Pencil, Plus, Save, Trash2, X } from "lucide-react";
 import { FormEvent, useState } from "react";
 import { appServices } from "../../app/services";
+import { useDirtySource } from "../../app/UnsavedChangesProvider";
 import { EmptyState } from "../../components/common/EmptyState";
 import { ScreenHeader } from "../../components/common/ScreenHeader";
 import type { Exercise, MenuTemplateDetail } from "../../domain/models";
@@ -24,6 +25,7 @@ function moveItem<T>(items: T[], fromIndex: number, toIndex: number) {
 }
 
 export function MenusPage() {
+  const dirty = useDirtySource("menu-forms");
   const [selectedExerciseIds, setSelectedExerciseIds] = useState<string[]>([]);
   const [message, setMessage] = useState("");
   const [libraryMessage, setLibraryMessage] = useState("");
@@ -59,6 +61,7 @@ export function MenusPage() {
       });
       formElement.reset();
       setSelectedExerciseIds([]);
+      dirty.markClean();
       setMessage("メニューを作成しました。");
       reload();
     } finally {
@@ -90,10 +93,12 @@ export function MenusPage() {
   }
 
   function reorderSelectedExercise(index: number, direction: -1 | 1) {
+    dirty.markDirty();
     setSelectedExerciseIds((current) => moveItem(current, index, index + direction));
   }
 
   function reorderEditingExercise(index: number, direction: -1 | 1) {
+    dirty.markDirty();
     setEditingMenu((current) =>
       current
         ? {
@@ -127,6 +132,7 @@ export function MenusPage() {
         exerciseIds: editingMenu.exerciseIds,
       });
       setEditingMenu(null);
+      dirty.markClean();
       setLibraryMessage("メニューを更新しました。");
       reload();
     } catch (error) {
@@ -148,7 +154,7 @@ export function MenusPage() {
         <div className="section-heading">
           <h3>新しいメニュー</h3>
         </div>
-        <form onSubmit={createMenu}>
+        <form onSubmit={createMenu} onChange={dirty.markDirty}>
           <div className="grid-2">
             <div className="field">
               <label>メニュー名</label>
@@ -240,7 +246,7 @@ export function MenusPage() {
                 key={item.menu.id}
               >
                 {isEditing && editingMenu ? (
-                  <form className="menu-edit-form" onSubmit={updateMenu}>
+                  <form className="menu-edit-form" onSubmit={updateMenu} onChange={dirty.markDirty}>
                     <div className="menu-edit-heading">
                       <div>
                         <h3>メニューを編集</h3>
@@ -319,6 +325,7 @@ export function MenusPage() {
                         disabled={isUpdating}
                         onClick={() => {
                           setEditingMenu(null);
+                          dirty.markClean();
                           setEditMessage("");
                         }}
                       >
@@ -357,7 +364,7 @@ export function MenusPage() {
                         onClick={async () => {
                           if (!confirm("このメニューを削除しますか？")) return;
                           await appServices.menus.delete(item.menu.id);
-                          if (editingMenu?.id === item.menu.id) setEditingMenu(null);
+                          if (editingMenu?.id === item.menu.id) { setEditingMenu(null); dirty.markClean(); }
                           setLibraryMessage("メニューを削除しました。");
                           reload();
                         }}

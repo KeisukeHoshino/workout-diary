@@ -2,6 +2,7 @@ import { CheckCircle2, Plus, Search, X } from 'lucide-react';
 import { FormEvent, useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { appServices } from '../../app/services';
+import { useDirtySource } from '../../app/UnsavedChangesProvider';
 import { EmptyState } from '../../components/common/EmptyState';
 import { ScreenHeader } from '../../components/common/ScreenHeader';
 import type { BodyPart, EquipmentType, Exercise, ExercisePreset } from '../../domain/models';
@@ -20,6 +21,7 @@ function normalizeSearchText(value: string) {
 }
 
 export function ExercisesPage() {
+  const dirty = useDirtySource('exercise-forms');
   const location = useLocation();
   const [selectedPresetIds, setSelectedPresetIds] = useState<string[]>([]);
   const [recentExerciseIds, setRecentExerciseIds] = useState<string[]>([]);
@@ -70,6 +72,7 @@ export function ExercisesPage() {
         equipmentType: (form.get('equipmentType') || null) as EquipmentType | null
       });
       formElement.reset();
+      dirty.markClean();
       setRecentExerciseIds([exercise.id]);
       setRecentPresetIds([]);
       setFeedbackKind('success');
@@ -122,6 +125,7 @@ export function ExercisesPage() {
         equipmentType: editingExercise.equipmentType,
       });
       setEditingExercise(null);
+      dirty.markClean();
       setRecentExerciseIds([updated.id]);
       setRecentPresetIds([]);
       setFeedbackKind('success');
@@ -152,7 +156,7 @@ export function ExercisesPage() {
         <div className="section-heading">
           <h3>新しい種目</h3>
         </div>
-        <form onSubmit={createExercise}>
+        <form onSubmit={createExercise} onChange={dirty.markDirty}>
           <div className="grid-3">
             <div className="field">
               <label>種目名</label>
@@ -196,8 +200,8 @@ export function ExercisesPage() {
               isRecent={recentExerciseIds.includes(exercise.id) || Boolean(exercise.sourcePresetId && recentPresetIds.includes(exercise.sourcePresetId))}
               isUpdating={isUpdating}
               key={exercise.id}
-              onCancelEditing={() => setEditingExercise(null)}
-              onDraftChange={setEditingExercise}
+              onCancelEditing={() => { setEditingExercise(null); dirty.markClean(); }}
+              onDraftChange={(draft) => { setEditingExercise(draft); dirty.markDirty(); }}
               onSave={updateExercise}
               onStartEditing={startEditingExercise}
               onVisibilityChange={changeExerciseVisibility}
@@ -220,8 +224,8 @@ export function ExercisesPage() {
                 isRecent={false}
                 isUpdating={isUpdating}
                 key={exercise.id}
-                onCancelEditing={() => setEditingExercise(null)}
-                onDraftChange={setEditingExercise}
+                onCancelEditing={() => { setEditingExercise(null); dirty.markClean(); }}
+                onDraftChange={(draft) => { setEditingExercise(draft); dirty.markDirty(); }}
                 onSave={updateExercise}
                 onStartEditing={startEditingExercise}
                 onVisibilityChange={changeExerciseVisibility}

@@ -2,6 +2,7 @@ import { ChevronLeft, ChevronRight, ListPlus, Plus, Trash2 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { appServices } from '../../app/services';
+import { useDirtySource } from '../../app/UnsavedChangesProvider';
 import { EmptyState } from '../../components/common/EmptyState';
 import { ScreenHeader } from '../../components/common/ScreenHeader';
 import type { Exercise, LocalDateString, MenuTemplateDetail, WorkoutDetail } from '../../domain/models';
@@ -165,10 +166,12 @@ function MenuPickerPanel({ menus, onChoose }: { menus: MenuTemplateDetail[]; onC
 
 function BodyWeightPanel({ date, value, onSaved }: { date: LocalDateString; value: number | null; onSaved: () => void }) {
   const [draft, setDraft] = useState(value?.toString() ?? '');
+  const dirty = useDirtySource(`body-weight-${date}`);
 
   useEffect(() => {
     setDraft(value?.toString() ?? '');
-  }, [value, date]);
+    dirty.markClean();
+  }, [value, date, dirty.markClean]);
 
   return (
     <section className="panel body-weight-panel">
@@ -182,11 +185,12 @@ function BodyWeightPanel({ date, value, onSaved }: { date: LocalDateString; valu
             step="0.1"
             value={draft}
             placeholder="例: 68.5"
-            onChange={(event) => setDraft(event.target.value)}
+            onChange={(event) => { setDraft(event.target.value); dirty.markDirty(); }}
             onBlur={async () => {
               const parsed = parseNullableNumber(draft, 0, 999.9);
               if (parsed === undefined) return;
               await appServices.workout.updateBodyWeight(date, parsed);
+              dirty.markClean();
               onSaved();
             }}
           />
@@ -254,6 +258,7 @@ function SetRow({ set, onChanged }: { set: WorkoutDetail['exercises'][number]['s
   const weightRef = useRef(weight);
   const repsRef = useRef(reps);
   const saveQueueRef = useRef(Promise.resolve());
+  const dirty = useDirtySource(`workout-set-${set.id}`);
 
   useEffect(() => {
     const nextWeight = set.weightKg?.toString() ?? '';
@@ -262,16 +267,19 @@ function SetRow({ set, onChanged }: { set: WorkoutDetail['exercises'][number]['s
     setReps(nextReps);
     weightRef.current = nextWeight;
     repsRef.current = nextReps;
-  }, [set.id, set.weightKg, set.reps]);
+    dirty.markClean();
+  }, [set.id, set.weightKg, set.reps, dirty.markClean]);
 
   const updateWeight = (nextWeight: string) => {
     weightRef.current = nextWeight;
     setWeight(nextWeight);
+    dirty.markDirty();
   };
 
   const updateReps = (nextReps: string) => {
     repsRef.current = nextReps;
     setReps(nextReps);
+    dirty.markDirty();
   };
 
   const save = (nextWeight = weightRef.current, nextReps = repsRef.current) => {
@@ -279,9 +287,10 @@ function SetRow({ set, onChanged }: { set: WorkoutDetail['exercises'][number]['s
     const parsedReps = parseNullableNumber(nextReps, 1, 999);
     if (weightKg === undefined || parsedReps === undefined) return Promise.resolve();
 
-    saveQueueRef.current = saveQueueRef.current.then(() =>
-      appServices.workout.updateSet(set.id, { weightKg, reps: parsedReps }),
-    );
+    saveQueueRef.current = saveQueueRef.current.then(async () => {
+      await appServices.workout.updateSet(set.id, { weightKg, reps: parsedReps });
+      dirty.markClean();
+    });
     return saveQueueRef.current;
   };
 
