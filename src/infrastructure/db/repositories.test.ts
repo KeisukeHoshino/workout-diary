@@ -1,6 +1,6 @@
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { db } from './database';
-import { bodyWeightRepository, menuRepository, workoutRepository } from './repositories';
+import { bodyWeightRepository, menuRepository, workoutRepository } from './repositories/index';
 
 const timestamp = '2026-01-01T00:00:00.000Z';
 
