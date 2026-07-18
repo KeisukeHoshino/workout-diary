@@ -17,7 +17,8 @@ function dependencies(): ApplicationDependencies {
     menuRepository: { list: vi.fn().mockResolvedValue([]), create: vi.fn(), update: vi.fn(), delete: vi.fn() },
     graphQuery: { maxWeight: vi.fn().mockResolvedValue([]), bodyWeight: vi.fn().mockResolvedValue([]) },
     historyQuery: { list: vi.fn().mockResolvedValue([]) },
-    settingsRepository: { get: vi.fn(), updateDefaultGraphRange: vi.fn(), reset: vi.fn() }
+    settingsRepository: { get: vi.fn(), updateDefaultGraphRange: vi.fn(), reset: vi.fn() },
+    backupService: { exportAll: vi.fn(), validate: vi.fn(), restore: vi.fn() }
   };
 }
 

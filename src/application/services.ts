@@ -1,6 +1,7 @@
 import type { GraphRange, LocalDateString } from '../domain/models';
 import type {
   BodyWeightRepositoryPort,
+  BackupServicePort,
   ExerciseRepositoryPort,
   GraphQueryPort,
   HistoryQueryPort,
@@ -18,6 +19,7 @@ export interface ApplicationDependencies {
   graphQuery: GraphQueryPort;
   historyQuery: HistoryQueryPort;
   settingsRepository: SettingsRepositoryPort;
+  backupService: BackupServicePort;
 }
 
 export function createApplicationServices(deps: ApplicationDependencies) {
@@ -77,7 +79,10 @@ export function createApplicationServices(deps: ApplicationDependencies) {
     settings: {
       async get() { await ready(); return deps.settingsRepository.get(); },
       updateDefaultGraphRange: deps.settingsRepository.updateDefaultGraphRange,
-      async reset() { await deps.settingsRepository.reset(); await ready(); }
+      async reset() { await deps.settingsRepository.reset(); await ready(); },
+      exportBackup: deps.backupService.exportAll,
+      validateBackup: deps.backupService.validate,
+      restoreBackup: deps.backupService.restore
     }
   };
 }

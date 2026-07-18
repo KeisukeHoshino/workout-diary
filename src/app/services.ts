@@ -1,5 +1,7 @@
 import { createApplicationServices } from '../application/services';
 import { initializeDatabase } from '../infrastructure/db/database';
+import { db } from '../infrastructure/db/database';
+import { createBackupService } from '../infrastructure/db/backupService';
 import {
   bodyWeightRepository,
   exerciseRepository,
@@ -18,5 +20,6 @@ export const appServices = createApplicationServices({
   menuRepository,
   graphQuery,
   historyQuery,
-  settingsRepository
+  settingsRepository,
+  backupService: createBackupService(db, '0.1.0')
 });

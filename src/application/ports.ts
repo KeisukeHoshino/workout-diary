@@ -10,8 +10,11 @@ import type {
   MaxWeightPoint,
   MenuTemplate,
   MenuTemplateDetail,
+  MenuTemplateExercise,
   UserSettings,
+  WorkoutDay,
   WorkoutDetail,
+  WorkoutExercise,
   WorkoutSet
 } from '../domain/models';
 
@@ -69,4 +72,32 @@ export interface SettingsRepositoryPort {
   get(): Promise<UserSettings | undefined>;
   updateDefaultGraphRange(range: GraphRange): Promise<void>;
   reset(): Promise<void>;
+}
+
+export interface BackupDocumentV1 {
+  formatVersion: 1;
+  exportedAt: string;
+  appVersion: string;
+  databaseVersion: number;
+  tables: {
+    userSettings: UserSettings[];
+    exercisePresets: ExercisePreset[];
+    exercises: Exercise[];
+    workoutDays: WorkoutDay[];
+    workoutExercises: WorkoutExercise[];
+    workoutSets: WorkoutSet[];
+    bodyWeightLogs: BodyWeightLog[];
+    menuTemplates: MenuTemplate[];
+    menuTemplateExercises: MenuTemplateExercise[];
+  };
+}
+
+export type BackupValidationResult =
+  | { valid: true; document: BackupDocumentV1; warnings: string[] }
+  | { valid: false; errors: string[]; warnings: string[] };
+
+export interface BackupServicePort {
+  exportAll(): Promise<BackupDocumentV1>;
+  validate(input: unknown): BackupValidationResult;
+  restore(document: BackupDocumentV1, mode: 'replace'): Promise<void>;
 }

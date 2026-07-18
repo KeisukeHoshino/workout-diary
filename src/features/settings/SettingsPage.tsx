@@ -1,5 +1,5 @@
-import { CheckCircle2, Download, Share2, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { CheckCircle2, Download, Share2, Trash2, Upload } from 'lucide-react';
+import { useRef, useState } from 'react';
 import { appServices } from '../../app/services';
 import { ScreenHeader } from '../../components/common/ScreenHeader';
 import type { GraphRange } from '../../domain/models';
@@ -11,6 +11,7 @@ export function SettingsPage() {
   const [message, setMessage] = useState('');
   const [installMessage, setInstallMessage] = useState('');
   const [showIosSteps, setShowIosSteps] = useState(false);
+  const backupInput = useRef<HTMLInputElement>(null);
   const { status: installStatus, install } = usePwaInstall();
   const { data, reload } = useAsyncData(async () => {
     return appServices.settings.get();
@@ -130,22 +131,45 @@ export function SettingsPage() {
         <div className="toolbar">
           <div>
             <h3>データ管理</h3>
-            <p className="muted">IndexedDB のデータをこの端末から削除します。</p>
+            <p className="muted">記録をJSONで保存・復元、またはこの端末から削除します。</p>
             {message ? <p className="settings-message">{message}</p> : null}
           </div>
-          <button
-            className="danger-button"
-            onClick={async () => {
+          <div className="actions">
+            <button className="secondary-button" type="button" onClick={async () => {
+              try {
+                const backup = await appServices.settings.exportBackup();
+                const url = URL.createObjectURL(new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' }));
+                const anchor = document.createElement('a');
+                anchor.href = url;
+                anchor.download = `workout-diary-${backup.exportedAt.slice(0, 10)}.json`;
+                anchor.click();
+                URL.revokeObjectURL(url);
+                setMessage('バックアップを書き出しました。');
+              } catch { setMessage('バックアップを書き出せませんでした。'); }
+            }}><Download size={16} aria-hidden="true" />バックアップ</button>
+            <button className="secondary-button" type="button" onClick={() => backupInput.current?.click()}><Upload size={16} aria-hidden="true" />復元</button>
+            <input ref={backupInput} type="file" accept="application/json,.json" hidden onChange={async (event) => {
+              const file = event.target.files?.[0];
+              event.target.value = '';
+              if (!file) return;
+              try {
+                const result = appServices.settings.validateBackup(JSON.parse(await file.text()));
+                if (!result.valid) throw new Error(result.errors.join(' '));
+                const warning = result.warnings.length ? `\n警告: ${result.warnings.join(' ')}` : '';
+                if (!confirm(`現在のデータをバックアップで置き換えますか？${warning}`)) return;
+                await appServices.settings.restoreBackup(result.document, 'replace');
+                setMessage('バックアップから復元しました。');
+                reload();
+              } catch (error) { setMessage(error instanceof Error ? error.message : 'バックアップを復元できませんでした。'); }
+            }} />
+            <button className="danger-button" type="button" onClick={async () => {
               if (!confirm('全データを削除しますか？')) return;
               if (!confirm('本当に削除しますか？この操作は元に戻せません。')) return;
               await appServices.settings.reset();
               setMessage('初期化しました。');
               reload();
-            }}
-          >
-            <Trash2 size={16} aria-hidden="true" />
-            全データ初期化
-          </button>
+            }}><Trash2 size={16} aria-hidden="true" />全データ初期化</button>
+          </div>
         </div>
       </section>
     </div>
