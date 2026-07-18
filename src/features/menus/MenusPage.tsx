@@ -4,7 +4,7 @@ import { appServices } from "../../app/services";
 import { useDirtySource } from "../../app/UnsavedChangesProvider";
 import { EmptyState } from "../../components/common/EmptyState";
 import { ScreenHeader } from "../../components/common/ScreenHeader";
-import type { Exercise, MenuTemplateDetail } from "../../domain/models";
+import type { MenuTemplateDetail } from "../../domain/models";
 import { validateName } from "../../domain/validation";
 import { useAsyncData } from "../shared/useAsyncData";
 import { SelectedExerciseOrder } from "./components/SelectedExerciseOrder";

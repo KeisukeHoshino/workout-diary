@@ -21,5 +21,5 @@ export const appServices = createApplicationServices({
   graphQuery,
   historyQuery,
   settingsRepository,
-  backupService: createBackupService(db, '0.1.0')
+  backupService: createBackupService(db, __APP_VERSION__)
 });

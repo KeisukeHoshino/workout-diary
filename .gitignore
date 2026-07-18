@@ -1,6 +1,10 @@
 .DS_Store
 node_modules/
 dist/
+coverage/
+playwright-report/
+test-results/
+.pnpm-store/
 .jj/
 *.tsbuildinfo
 

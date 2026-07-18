@@ -5,6 +5,10 @@ import { VitePWA } from 'vite-plugin-pwa';
 import { cloudflare } from "@cloudflare/vite-plugin";
 
 export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(process.env.npm_package_version ?? '0.0.0'),
+    __COMMIT_SHA__: JSON.stringify(process.env.CF_PAGES_COMMIT_SHA ?? process.env.GITHUB_SHA ?? 'local')
+  },
   plugins: [react(), VitePWA({
     registerType: 'prompt',
     includeAssets: ['icon.svg', 'apple-touch-icon.png'],
