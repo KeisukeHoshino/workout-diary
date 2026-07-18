@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { appServices } from '../../app/services';
 import {
   CartesianGrid,
   Line,
@@ -12,8 +13,6 @@ import { EmptyState } from '../../components/common/EmptyState';
 import { ScreenHeader } from '../../components/common/ScreenHeader';
 import type { BodyWeightPoint, GraphRange, MaxWeightPoint } from '../../domain/models';
 import { formatKg, graphRangeLabels } from '../../domain/rules';
-import { initializeDatabase } from '../../infrastructure/db/database';
-import { exerciseRepository, graphRepository, settingsRepository } from '../../infrastructure/db/repositories';
 import { useAsyncData } from '../shared/useAsyncData';
 
 type GraphTab = 'weight' | 'body';
@@ -23,9 +22,7 @@ export function GraphsPage() {
   const [range, setRange] = useState<GraphRange>('3m');
   const [exerciseId, setExerciseId] = useState('');
   const { data, reload } = useAsyncData(async () => {
-    await initializeDatabase();
-    const [settings, exercises] = await Promise.all([settingsRepository.get(), exerciseRepository.listActive()]);
-    return { settings, exercises };
+    return appServices.graphs.initialize();
   });
 
   useEffect(() => {
@@ -72,8 +69,8 @@ export function GraphsPage() {
 
 function GraphContent({ tab, range, exerciseId, reloadKey }: { tab: GraphTab; range: GraphRange; exerciseId: string; reloadKey: number; onLoaded: () => void }) {
   const { data } = useAsyncData(async () => {
-    if (tab === 'weight') return exerciseId ? graphRepository.listMaxWeightPoints(exerciseId, range) : [];
-    return graphRepository.listBodyWeightPoints(range);
+    if (tab === 'weight') return exerciseId ? appServices.graphs.maxWeight(exerciseId, range) : [];
+    return appServices.graphs.bodyWeight(range);
   }, [tab, range, exerciseId, reloadKey]);
 
   const points = data ?? [];

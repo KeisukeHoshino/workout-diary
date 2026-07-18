@@ -1,15 +1,12 @@
-import { ArrowDown, ArrowUp, Pencil, Plus, Save, Trash2, X } from "lucide-react";
+import { Pencil, Plus, Save, Trash2, X } from "lucide-react";
 import { FormEvent, useState } from "react";
+import { appServices } from "../../app/services";
 import { EmptyState } from "../../components/common/EmptyState";
 import { ScreenHeader } from "../../components/common/ScreenHeader";
 import type { Exercise, MenuTemplateDetail } from "../../domain/models";
 import { validateName } from "../../domain/validation";
-import { initializeDatabase } from "../../infrastructure/db/database";
-import {
-  exerciseRepository,
-  menuRepository,
-} from "../../infrastructure/db/repositories";
 import { useAsyncData } from "../shared/useAsyncData";
+import { SelectedExerciseOrder } from "./components/SelectedExerciseOrder";
 
 interface MenuDraft {
   id: string;
@@ -35,12 +32,7 @@ export function MenusPage() {
   const [isSubmitting, setSubmitting] = useState(false);
   const [isUpdating, setUpdating] = useState(false);
   const { data, reload } = useAsyncData(async () => {
-    await initializeDatabase();
-    const [menus, exercises] = await Promise.all([
-      menuRepository.list(),
-      exerciseRepository.listActive(),
-    ]);
-    return { menus, exercises };
+    return appServices.menus.load();
   });
 
   async function createMenu(event: FormEvent<HTMLFormElement>) {
@@ -60,7 +52,7 @@ export function MenusPage() {
 
     setSubmitting(true);
     try {
-      await menuRepository.create({
+      await appServices.menus.create({
         name,
         memo: String(form.get("memo") ?? "").slice(0, 500),
         exerciseIds: selectedExerciseIds,
@@ -129,7 +121,7 @@ export function MenusPage() {
 
     setUpdating(true);
     try {
-      await menuRepository.update(editingMenu.id, {
+      await appServices.menus.update(editingMenu.id, {
         name,
         memo: editingMenu.memo.slice(0, 500),
         exerciseIds: editingMenu.exerciseIds,
@@ -364,7 +356,7 @@ export function MenusPage() {
                         disabled={isUpdating}
                         onClick={async () => {
                           if (!confirm("このメニューを削除しますか？")) return;
-                          await menuRepository.delete(item.menu.id);
+                          await appServices.menus.delete(item.menu.id);
                           if (editingMenu?.id === item.menu.id) setEditingMenu(null);
                           setLibraryMessage("メニューを削除しました。");
                           reload();
@@ -381,61 +373,6 @@ export function MenusPage() {
           })}
         </div>
       </section>
-    </div>
-  );
-}
-
-function SelectedExerciseOrder({
-  exerciseIds,
-  exercises,
-  onMove,
-}: {
-  exerciseIds: string[];
-  exercises: Exercise[];
-  onMove: (index: number, direction: -1 | 1) => void;
-}) {
-  const selectedExercises = exerciseIds
-    .map((exerciseId) => exercises.find((exercise) => exercise.id === exerciseId))
-    .filter((exercise): exercise is Exercise => Boolean(exercise));
-
-  if (!selectedExercises.length) return null;
-
-  return (
-    <div className="menu-selected-order" aria-label="メニュー内種目の並び順">
-      <div className="toolbar">
-        <div className="label">並び順</div>
-        <span className="badge">上から記録に追加</span>
-      </div>
-      <ol className="menu-order-list">
-        {selectedExercises.map((exercise, index) => (
-          <li className="menu-order-item" key={exercise.id}>
-            <span className="menu-order-number">{index + 1}</span>
-            <span className="menu-order-name">{exercise.name}</span>
-            <div className="menu-order-actions" aria-label={`${exercise.name}の並び順操作`}>
-              <button
-                className="icon-button"
-                type="button"
-                disabled={index === 0}
-                onClick={() => onMove(index, -1)}
-                aria-label={`${exercise.name}を上へ移動`}
-                title="上へ移動"
-              >
-                <ArrowUp size={16} aria-hidden="true" />
-              </button>
-              <button
-                className="icon-button"
-                type="button"
-                disabled={index === selectedExercises.length - 1}
-                onClick={() => onMove(index, 1)}
-                aria-label={`${exercise.name}を下へ移動`}
-                title="下へ移動"
-              >
-                <ArrowDown size={16} aria-hidden="true" />
-              </button>
-            </div>
-          </li>
-        ))}
-      </ol>
     </div>
   );
 }

@@ -1,10 +1,9 @@
 import { CheckCircle2, Download, Share2, Trash2 } from 'lucide-react';
 import { useState } from 'react';
+import { appServices } from '../../app/services';
 import { ScreenHeader } from '../../components/common/ScreenHeader';
 import type { GraphRange } from '../../domain/models';
 import { graphRangeLabels } from '../../domain/rules';
-import { db, initializeDatabase } from '../../infrastructure/db/database';
-import { settingsRepository } from '../../infrastructure/db/repositories';
 import { usePwaInstall } from '../../pwa/PwaInstallProvider';
 import { useAsyncData } from '../shared/useAsyncData';
 
@@ -14,8 +13,7 @@ export function SettingsPage() {
   const [showIosSteps, setShowIosSteps] = useState(false);
   const { status: installStatus, install } = usePwaInstall();
   const { data, reload } = useAsyncData(async () => {
-    await initializeDatabase();
-    return settingsRepository.get();
+    return appServices.settings.get();
   });
 
   return (
@@ -35,7 +33,7 @@ export function SettingsPage() {
             <select
               value={data?.defaultGraphRange ?? '3m'}
               onChange={async (event) => {
-                await settingsRepository.updateDefaultGraphRange(event.target.value as GraphRange);
+                await appServices.settings.updateDefaultGraphRange(event.target.value as GraphRange);
                 setMessage('設定を保存しました。');
                 reload();
               }}
@@ -140,9 +138,7 @@ export function SettingsPage() {
             onClick={async () => {
               if (!confirm('全データを削除しますか？')) return;
               if (!confirm('本当に削除しますか？この操作は元に戻せません。')) return;
-              await db.delete();
-              await db.open();
-              await initializeDatabase();
+              await appServices.settings.reset();
               setMessage('初期化しました。');
               reload();
             }}
