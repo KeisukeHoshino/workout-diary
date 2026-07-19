@@ -12,6 +12,7 @@ import type {
 } from '../../domain/models';
 import { exercisePresets } from './seedPresets';
 
+// Dexieのschema文字列はインデックス定義を兼ねる。whereで使うキーはここに必ず追加する。
 export const databaseSchema = {
   userSettings: 'id',
   exercisePresets: 'id, bodyPart, name, sortOrder',
@@ -28,6 +29,7 @@ type LegacyBodyPart = Exercise['bodyPart'] | 'legs' | 'arms' | 'shoulders';
 type LegacyExercise = Omit<Exercise, 'bodyPart'> & { bodyPart: LegacyBodyPart };
 type LegacyExercisePreset = Omit<ExercisePreset, 'bodyPart'> & { bodyPart: LegacyBodyPart };
 
+// 旧「脚」カテゴリを、既存データを消さずに対象筋ベースへ寄せるための名称推定。
 function migratedLegBodyPart(name: string, sourcePresetId: string | null): Exercise['bodyPart'] {
   const normalizedName = name.trim().normalize('NFKC').toLocaleLowerCase('ja-JP');
   const hamstringsKeywords = [
@@ -134,6 +136,7 @@ export class WorkoutDiaryDatabase extends Dexie {
   constructor(name = 'workoutDiary') {
     super(name);
     this.version(1).stores(databaseSchema);
+    // versionごとのupgradeは、古いブラウザ内データを保持したまま新しいBodyPartへ移すために残す。
     this.version(2).stores(databaseSchema).upgrade(async (transaction) => {
       const timestamp = new Date().toISOString();
 
@@ -185,6 +188,7 @@ export async function initializeDatabase() {
   const now = new Date().toISOString();
   const settings = await db.userSettings.get('default');
   if (!settings) {
+    // 設定は1ユーザー1レコードだけなので、固定ID default でupsertしやすくする。
     await db.userSettings.put({
       id: 'default',
       weightUnit: 'kg',
@@ -201,6 +205,7 @@ export async function initializeDatabase() {
 
   const existingExercises = await db.exercises.toArray();
   if (existingExercises.filter((exercise) => exercise.isActive).length === 0) {
+    // 初回利用時だけ最低限のマイ種目を作り、以後はユーザーの非表示状態を尊重する。
     const existingPresetIds = new Set(existingExercises.map((exercise) => exercise.sourcePresetId).filter(Boolean));
     const initialPresets = exercisePresets.slice(0, 8);
     await db.exercises.bulkPut(initialPresets.filter((preset) => !existingPresetIds.has(preset.id)).map((preset, index) => ({

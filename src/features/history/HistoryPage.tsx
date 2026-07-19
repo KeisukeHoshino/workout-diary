@@ -5,6 +5,7 @@ import { ScreenHeader } from '../../components/common/ScreenHeader';
 import { dateLabel, formatKg } from '../../domain/rules';
 import { useAsyncData } from '../shared/useAsyncData';
 
+// 体重だけの日も履歴に出すため、記録日と体重ログ日の和集合をquery側で受け取って表示する。
 export function HistoryPage() {
   const { data, reload } = useAsyncData(() => appServices.history.list());
 

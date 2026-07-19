@@ -25,6 +25,7 @@ interface PwaInstallContextValue {
 
 const PwaInstallContext = createContext<PwaInstallContextValue | null>(null);
 
+// ブラウザ標準のbeforeinstallpromptは一度捕まえて、設定画面の任意タイミングで表示する。
 function isStandalone() {
   const navigatorWithStandalone = navigator as Navigator & { standalone?: boolean };
   return (
@@ -81,6 +82,7 @@ export function PwaInstallProvider({ children }: PropsWithChildren) {
   async function install(): Promise<InstallOutcome> {
     if (!installPrompt) return 'unavailable';
 
+    // prompt後は同じイベントを再利用できないため、結果に関わらず保持を解除する。
     await installPrompt.prompt();
     const choice = await installPrompt.userChoice;
     setInstallPrompt(null);

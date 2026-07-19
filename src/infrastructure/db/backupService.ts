@@ -2,6 +2,7 @@ import type { BackupDocumentV1, BackupServicePort, BackupValidationResult } from
 import type { WorkoutDiaryDatabase } from './database';
 import { backupDocumentSchema, type ParsedBackupDocument } from './backupSchema';
 
+// 復元時に同一IDが複数あると参照関係を壊すため、全テーブルで先に重複を検出する。
 function duplicates(rows: Array<{ id: string }>, table: string, errors: string[]) {
   const ids = new Set<string>();
   for (const row of rows) {
@@ -24,6 +25,7 @@ function validateRelations(document: ParsedBackupDocument) {
   duplicates(tables.bodyWeightLogs, 'bodyWeightLogs', errors);
   const menuIds = duplicates(tables.menuTemplates, 'menuTemplates', errors);
   duplicates(tables.menuTemplateExercises, 'menuTemplateExercises', errors);
+  // 日付は画面上の主キーとして扱うため、IndexedDB制約と同じ前提をバックアップにも要求する。
   const workoutDates = new Set<string>();
   for (const day of tables.workoutDays) {
     if (workoutDates.has(day.date)) errors.push(`workoutDays の日付 ${day.date} が重複しています。`);
@@ -36,6 +38,7 @@ function validateRelations(document: ParsedBackupDocument) {
   }
   for (const card of tables.workoutExercises) {
     if (!dayIds.has(card.workoutDayId)) errors.push(`workoutExercises ${card.id} の日別記録が存在しません。`);
+    // 過去記録は削除済み種目を表示できるため、種目欠落は警告に留める。
     if (!exerciseIds.has(card.exerciseId)) warnings.push(`過去記録 ${card.id} は存在しない種目 ${card.exerciseId} を参照しています。`);
   }
   for (const set of tables.workoutSets) if (!cardIds.has(set.workoutExerciseId)) errors.push(`workoutSets ${set.id} の種目カードが存在しません。`);
@@ -78,6 +81,7 @@ export function createBackupService(database: WorkoutDiaryDatabase, appVersion: 
       const result = validate(document);
       if (!result.valid) throw new Error(result.errors.join('\n'));
       const t = result.document.tables;
+      // replace復元は全テーブルを同一transactionで入れ替え、途中失敗時に半端な状態を残さない。
       await database.transaction('rw', database.tables, async () => {
         await Promise.all(database.tables.map((table) => table.clear()));
         await database.userSettings.bulkPut(t.userSettings);

@@ -18,6 +18,7 @@ const messages: Record<ClientErrorKind, string> = {
   'pwa-update': 'PWA更新処理でエラーが発生しました。'
 };
 
+// 外部送信するエラー情報は、本文や入力値を含めず運用判断に必要な最小項目だけに絞る。
 export function buildSafeClientErrorEvent(kind: ClientErrorKind, value: unknown, path = window.location.pathname): SafeClientErrorEvent {
   const name = value instanceof Error ? value.name : 'UnknownError';
   return {
@@ -35,6 +36,7 @@ export function reportClientError(kind: ClientErrorKind, value: unknown) {
   const event = buildSafeClientErrorEvent(kind, value);
   console.error('[workout-diary]', event);
   if (runtimeConfig.errorEndpoint) {
+    // keepaliveでページ離脱中のエラーも送れるようにし、失敗してもユーザー操作を妨げない。
     void fetch(runtimeConfig.errorEndpoint, {
       method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(event),
       keepalive: true, credentials: 'omit'

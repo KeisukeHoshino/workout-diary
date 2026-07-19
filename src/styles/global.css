@@ -2,6 +2,7 @@
   box-sizing: border-box;
 }
 
+/* PWA更新通知は入力を邪魔しないよう、下部ナビより少し上へ固定する。 */
 .pwa-update-notice {
   position: fixed;
   right: 16px;
@@ -49,6 +50,7 @@ button:disabled {
   opacity: 0.48;
 }
 
+/* アプリ全体の基本レイアウト。PCはサイドナビ、狭い画面では下部ナビへ切り替える。 */
 .app-shell {
   min-height: 100vh;
   display: grid;

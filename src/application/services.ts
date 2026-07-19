@@ -22,6 +22,7 @@ export interface ApplicationDependencies {
   backupService: BackupServicePort;
 }
 
+// 画面ごとのユースケースをここに集め、各画面が複数Repositoryの呼び出し順を抱え込まないようにする。
 export function createApplicationServices(deps: ApplicationDependencies) {
   const ready = () => deps.initialize();
   return {

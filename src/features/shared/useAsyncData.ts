@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 
+// 画面単位の非同期ロードを共通化する。reloadは依存配列を変えずに再取得したい時の手動トリガー。
 export function useAsyncData<T>(loader: () => Promise<T>, deps: unknown[] = []) {
   const [data, setData] = useState<T | null>(null);
   const [isLoading, setLoading] = useState(true);

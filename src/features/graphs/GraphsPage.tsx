@@ -17,6 +17,7 @@ import { useAsyncData } from '../shared/useAsyncData';
 
 type GraphTab = 'weight' | 'body';
 
+// グラフ画面は表示条件だけを持ち、集計ロジックはdomainの純粋関数へ寄せる。
 export function GraphsPage() {
   const [tab, setTab] = useState<GraphTab>('weight');
   const [range, setRange] = useState<GraphRange>('3m');
@@ -103,6 +104,7 @@ function Summary({ points, tab }: { points: Array<MaxWeightPoint | BodyWeightPoi
   const highest = Math.max(...values);
   const lowest = Math.min(...values);
   const delta = latest - first;
+  // 体重グラフでは最低値、重量グラフでは最高値を主指標として見せる。
   const metrics = tab === 'weight'
     ? [
       ['最新', formatKg(latest)],

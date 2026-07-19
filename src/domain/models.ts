@@ -4,6 +4,7 @@ export type ISODateTimeString = string;
 export type WeightUnit = 'kg';
 export type GraphRange = '1m' | '3m' | '6m' | 'all';
 
+// BodyPart は集計・絞り込み・プリセット分類の共通キー。ラベル変更だけなら rules.ts 側で行う。
 export type BodyPart =
   | 'chest'
   | 'back'
@@ -111,6 +112,7 @@ export interface MenuTemplateExercise {
 }
 
 export interface WorkoutDetail {
+  // 記録画面が1回のロードで描画できるよう、日付・体重・種目カード・セットをまとめた読み取りモデル。
   day: WorkoutDay | null;
   bodyWeightLog: BodyWeightLog | null;
   exercises: Array<{

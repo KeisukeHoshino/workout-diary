@@ -1,5 +1,6 @@
 import type { BodyPart, EquipmentType, GraphRange, LocalDateString } from './models';
 
+// DBには安定したキーを保存し、画面表示だけをここで日本語化する。
 export const bodyPartLabels: Record<BodyPart, string> = {
   chest: '胸',
   back: '背中',
@@ -32,6 +33,7 @@ export const graphRangeLabels: Record<GraphRange, string> = {
 };
 
 export function localDate(date = new Date()): LocalDateString {
+  // ISO文字列のUTC変換で日付がずれないよう、ローカル時刻のオフセットを差し引く。
   const offset = date.getTimezoneOffset() * 60000;
   return new Date(date.getTime() - offset).toISOString().slice(0, 10) as LocalDateString;
 }

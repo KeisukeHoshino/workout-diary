@@ -7,6 +7,7 @@ import { MenusPage } from '../features/menus/MenusPage';
 import { SettingsPage } from '../features/settings/SettingsPage';
 import { WorkoutPage } from '../features/workout/WorkoutPage';
 
+// 画面単位のルーティング定義。記録画面をホームにして、日々の入力を最短導線にする。
 export const router = createBrowserRouter([
   {
     path: '/',

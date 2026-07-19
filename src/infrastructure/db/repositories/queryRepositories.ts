@@ -2,6 +2,7 @@ import type { GraphQueryPort, HistoryQueryPort } from '../../../application/port
 import { aggregateBodyWeightPoints, aggregateMaxWeightPoints } from '../../../domain/graphAggregation';
 import { db } from '../database';
 
+// 読み取り専用の集計Query。Repositoryの更新系と分け、画面用の派生データをここで組み立てる。
 export const graphQuery: GraphQueryPort = {
   async maxWeight(exerciseId, range) {
     const [days, cards, sets] = await Promise.all([db.workoutDays.toArray(), db.workoutExercises.toArray(), db.workoutSets.toArray()]);
@@ -17,6 +18,7 @@ export const historyQuery: HistoryQueryPort = {
     const [days, weights, cards, sets, exercises] = await Promise.all([
       db.workoutDays.toArray(), db.bodyWeightLogs.toArray(), db.workoutExercises.toArray(), db.workoutSets.toArray(), db.exercises.toArray()
     ]);
+    // 体重だけを入力した日も履歴に表示するため、workoutDaysとbodyWeightLogsの日付を統合する。
     const dates = [...new Set([...days.map((day) => day.date), ...weights.map((weight) => weight.date)])].sort((a, b) => b.localeCompare(a));
     const exerciseNames = new Map(exercises.map((exercise) => [exercise.id, exercise.name]));
     return dates.map((date) => {

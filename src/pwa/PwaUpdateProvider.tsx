@@ -12,6 +12,7 @@ interface PwaUpdateValue {
 
 const PwaUpdateContext = createContext<PwaUpdateValue | null>(null);
 
+// Service Worker更新は未保存入力を消す可能性があるため、dirty状態が消えるまで適用を止める。
 export function PwaUpdateProvider({ children }: PropsWithChildren) {
   const { isDirty } = useUnsavedChanges();
   const { needRefresh: [needRefresh, setNeedRefresh], updateServiceWorker } = useRegisterSW({

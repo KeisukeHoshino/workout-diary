@@ -10,6 +10,7 @@ import { addDays, bodyPartLabels, dateLabel, equipmentTypeLabels, formatKg, loca
 import { parseNullableNumber } from '../../domain/validation';
 import { useAsyncData } from '../shared/useAsyncData';
 
+// 日々の入力画面。重い集計は持たず、当日分の読み書きに集中させる。
 export function WorkoutPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const date = (searchParams.get('date') || localDate()) as LocalDateString;
@@ -126,6 +127,7 @@ function PickerPanel({ exercises, onChoose }: { exercises: Exercise[]; onChoose:
         ))}
       </div>
       <div className="picker-panel-actions">
+        {/* 種目が見つからない時は、記録画面からマスタ管理へすぐ移動できる導線を出す。 */}
         <Link className="secondary-button" to="/exercises#create">
           <Plus size={16} aria-hidden="true" />
           新規作成
@@ -257,6 +259,7 @@ function SetRow({ set, onChanged }: { set: WorkoutDetail['exercises'][number]['s
   const [reps, setReps] = useState(set.reps?.toString() ?? '');
   const weightRef = useRef(weight);
   const repsRef = useRef(reps);
+  // 補助ボタン連打時も最後の入力順で保存するため、DB更新を直列化する。
   const saveQueueRef = useRef(Promise.resolve());
   const dirty = useDirtySource(`workout-set-${set.id}`);
 
@@ -287,6 +290,7 @@ function SetRow({ set, onChanged }: { set: WorkoutDetail['exercises'][number]['s
     const parsedReps = parseNullableNumber(nextReps, 1, 999);
     if (weightKg === undefined || parsedReps === undefined) return Promise.resolve();
 
+    // セット保存だけで画面全体をreloadすると入力中にちらつくため、行内状態を信頼して裏で保存する。
     saveQueueRef.current = saveQueueRef.current.then(async () => {
       await appServices.workout.updateSet(set.id, { weightKg, reps: parsedReps });
       dirty.markClean();
@@ -298,6 +302,7 @@ function SetRow({ set, onChanged }: { set: WorkoutDetail['exercises'][number]['s
     const currentWeight = parseNullableNumber(weightRef.current, 0, 999.9);
     if (currentWeight === undefined) return;
     const baseWeight = currentWeight ?? 0;
+    // 小数演算の誤差を表示へ持ち込まないよう、0.1kg単位で丸める。
     const nextWeight = Math.round(Math.min(999.9, Math.max(0, baseWeight + delta)) * 10) / 10;
     const nextWeightText = nextWeight.toString();
     updateWeight(nextWeightText);

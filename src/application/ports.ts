@@ -18,6 +18,7 @@ import type {
   WorkoutSet
 } from '../domain/models';
 
+// UI層とDB実装の境界。保存先をIndexedDB以外へ差し替えても、画面側の契約を変えない。
 export interface WorkoutRepositoryPort {
   getWorkoutByDate(date: LocalDateString): Promise<WorkoutDetail>;
   addExerciseToDate(date: LocalDateString, exerciseId: string): Promise<void>;
@@ -75,6 +76,7 @@ export interface SettingsRepositoryPort {
 }
 
 export interface BackupDocumentV1 {
+  // formatVersion はアプリ版数ではなく、バックアップJSON自体の互換性を表す。
   formatVersion: 1;
   exportedAt: string;
   appVersion: string;

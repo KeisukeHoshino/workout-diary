@@ -12,6 +12,7 @@ import {
   workoutRepository
 } from '../infrastructure/db/repositories/index';
 
+// UI はこの集約済み service だけを参照し、Dexie などの保存実装を直接知らないようにする。
 export const appServices = createApplicationServices({
   initialize: initializeDatabase,
   workoutRepository,

@@ -1,6 +1,7 @@
 import type { BodyWeightLog, GraphRange, MaxWeightPoint, WorkoutDay, WorkoutExercise, WorkoutSet } from './models';
 import { rangeStart } from './rules';
 
+// グラフ用の集計はDBに依存させず、配列入力だけでテストできる純粋関数にしている。
 export function aggregateMaxWeightPoints(
   exerciseId: string,
   range: GraphRange,
@@ -14,6 +15,7 @@ export function aggregateMaxWeightPoints(
     .filter((day) => !from || day.date >= from)
     .map((day) => {
       const cards = workoutExercises.filter((item) => item.workoutDayId === day.id && item.exerciseId === exerciseId);
+      // 同じ種目が同日に複数カードへ分かれても、その日の最大重量だけを点として採用する。
       const targetSets = sets.filter(
         (set) => cards.some((card) => card.id === set.workoutExerciseId) && set.weightKg !== null
       );

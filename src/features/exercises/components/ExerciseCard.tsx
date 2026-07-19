@@ -3,6 +3,7 @@ import type { FormEvent } from 'react';
 import type { BodyPart, EquipmentType, Exercise } from '../../../domain/models';
 import { bodyPartLabels, equipmentTypeLabels } from '../../../domain/rules';
 
+// 一覧表示と編集フォームを同じカードで切り替え、非表示種目も同じ操作体系に揃える。
 export interface ExerciseDraft {
   id: string;
   name: string;

@@ -5,6 +5,7 @@ import { uuid } from '../../../domain/rules';
 import { db } from '../database';
 import { now } from './shared';
 
+// 記録がない日へ種目や体重を追加する時だけ、日別レコードを遅延作成する。
 async function ensureWorkoutDay(date: LocalDateString) {
   const existing = await db.workoutDays.where('date').equals(date).first();
   if (existing) return existing;
@@ -34,6 +35,7 @@ export const workoutRepository: WorkoutRepositoryPort = {
       .between([day.id, Dexie.minKey], [day.id, Dexie.maxKey]).toArray();
     const rows = await Promise.all(cards.map(async (workoutExercise) => ({
       workoutExercise,
+      // 種目マスタが将来消えても、過去記録自体は「削除済み種目」として表示し続ける。
       exercise: exercises.find((exercise) => exercise.id === workoutExercise.exerciseId) ?? {
         id: workoutExercise.exerciseId, name: '削除済み種目', bodyPart: 'other' as BodyPart,
         equipmentType: null, sortOrder: 0, isActive: false, sourcePresetId: null,
@@ -49,6 +51,7 @@ export const workoutRepository: WorkoutRepositoryPort = {
     await db.transaction('rw', db.workoutDays, db.workoutExercises, db.workoutSets, async () => {
       const day = await ensureWorkoutDay(date);
       const existing = await db.workoutExercises.where('workoutDayId').equals(day.id).and((item) => item.exerciseId === exerciseId).first();
+      // 同じ日に同じ種目を追加した場合はカードを増やさず、セット追加として扱う。
       if (existing) return addSet(existing.id);
       const siblings = await db.workoutExercises.where('workoutDayId').equals(day.id).toArray();
       const timestamp = now();
@@ -61,6 +64,7 @@ export const workoutRepository: WorkoutRepositoryPort = {
   async addMenuToDate(date, menuId) {
     const items = await db.menuTemplateExercises.where('[menuTemplateId+sortOrder]')
       .between([menuId, Dexie.minKey], [menuId, Dexie.maxKey]).toArray();
+    // メニュー内のsortOrderを守るため、Promise.allではなく順番に追加する。
     for (const item of items) await workoutRepository.addExerciseToDate(date, item.exerciseId);
   },
   addSet,
@@ -74,6 +78,7 @@ export const workoutRepository: WorkoutRepositoryPort = {
     await db.workoutSets.delete(id);
     const siblings = await db.workoutSets.where('[workoutExerciseId+setNumber]')
       .between([existing.workoutExerciseId, Dexie.minKey], [existing.workoutExerciseId, Dexie.maxKey]).toArray();
+    // セット削除後は表示番号に穴が空かないよう、同一カード内だけ振り直す。
     await Promise.all(siblings.map((set, index) => db.workoutSets.put({ ...set, setNumber: index + 1, updatedAt: now() })));
   },
   async deleteWorkoutExercise(id) {

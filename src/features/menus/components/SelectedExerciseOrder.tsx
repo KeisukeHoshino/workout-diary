@@ -1,11 +1,13 @@
 import { ArrowDown, ArrowUp } from 'lucide-react';
 import type { Exercise } from '../../../domain/models';
 
+// メニュー編集で選択済み種目だけを順序付きで見せる小さな操作部品。
 export function SelectedExerciseOrder({ exerciseIds, exercises, onMove }: {
   exerciseIds: string[];
   exercises: Exercise[];
   onMove: (index: number, direction: -1 | 1) => void;
 }) {
+  // 非表示などで参照先が見つからないIDは表示対象から外し、UI操作で落ちないようにする。
   const selected = exerciseIds.map((id) => exercises.find((exercise) => exercise.id === id)).filter((exercise): exercise is Exercise => Boolean(exercise));
   if (!selected.length) return null;
   return (

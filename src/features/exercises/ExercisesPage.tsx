@@ -12,6 +12,7 @@ import { validateName } from '../../domain/validation';
 import { useAsyncData } from '../shared/useAsyncData';
 import { ExerciseCard, type ExerciseDraft } from './components/ExerciseCard';
 
+// プリセット検索では、ひらがな・カタカナ・半角カナの違いでヒット漏れしないよう正規化する。
 function normalizeSearchText(value: string) {
   return value
     .trim()
@@ -51,6 +52,7 @@ export function ExercisesPage() {
 
   useEffect(() => {
     if (!highlightedSection) return;
+    // 記録画面の導線から来た時に、目的の作成/プリセット欄へ迷わず着地させる。
     const target = document.getElementById(highlightedSection);
     target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, [highlightedSection]);
@@ -252,6 +254,7 @@ export function ExercisesPage() {
               setRecentExerciseIds([]);
               setRecentPresetIds(presetIds);
               setFeedbackKind(result.addedCount ? 'success' : 'error');
+              // 追加済みや同名重複はRepository側でスキップし、ユーザーには結果だけをまとめて知らせる。
               setFeedback(result.addedCount
                 ? `${result.addedCount} 件のプリセットをマイ種目に追加しました。${result.skippedCount ? ` ${result.skippedCount} 件は同名または追加済みのためスキップしました。` : ''}`
                 : '選択したプリセットは同名または追加済みのため追加できませんでした。');

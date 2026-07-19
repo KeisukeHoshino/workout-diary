@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+// バックアップ復元は外部JSONを読むため、型定義とは別に実行時schemaで検証する。
 const id = z.string().min(1);
 const localDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 const dateTime = z.string().datetime();

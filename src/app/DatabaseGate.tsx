@@ -1,6 +1,7 @@
 import { type PropsWithChildren, useCallback, useEffect, useState } from 'react';
 import { appServices } from './services';
 
+// IndexedDB を開けない状態では通常画面を描画せず、ユーザーの保存データ保護を優先する。
 export function DatabaseGate({ children }: PropsWithChildren) {
   const [state, setState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [message, setMessage] = useState('');
@@ -25,6 +26,7 @@ export function DatabaseGate({ children }: PropsWithChildren) {
             <button className="button" type="button" onClick={initialize}>再試行</button>
             <button className="secondary-button" type="button" onClick={async () => {
               try {
+                // DBが壊れかけている場合でも、読める範囲のバックアップ取得を先に試す。
                 const backup = await appServices.settings.exportBackup();
                 const url = URL.createObjectURL(new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' }));
                 const anchor = document.createElement('a');

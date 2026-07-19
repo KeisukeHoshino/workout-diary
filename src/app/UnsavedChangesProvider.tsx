@@ -8,6 +8,7 @@ interface UnsavedChangesValue {
 
 const UnsavedChangesContext = createContext<UnsavedChangesValue | null>(null);
 
+// 複数フォームが同時にdirtyになり得るため、booleanではなくsource名の集合で追跡する。
 export function UnsavedChangesProvider({ children }: PropsWithChildren) {
   const [sources, setSources] = useState<Set<string>>(() => new Set());
   const markDirty = useCallback((source: string) => setSources((current) => new Set(current).add(source)), []);
@@ -29,6 +30,7 @@ export function useUnsavedChanges() {
 
 export function useDirtySource(source: string) {
   const { markDirty, markClean } = useUnsavedChanges();
+  // コンポーネントのアンマウント時にdirty状態が残り続けないよう、source単位で掃除する。
   useEffect(() => () => markClean(source), [markClean, source]);
   return {
     markDirty: useCallback(() => markDirty(source), [markDirty, source]),

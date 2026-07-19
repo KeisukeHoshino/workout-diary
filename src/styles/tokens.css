@@ -1,4 +1,5 @@
 :root {
+  /* 画面全体で共有するデザイントークン。個別コンポーネントでは原則ここから参照する。 */
   color-scheme: light;
   --bg: #f4f6f5;
   --panel: #ffffff;

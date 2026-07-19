@@ -4,6 +4,7 @@ import { uuid } from '../../../domain/rules';
 import { db } from '../database';
 import { normalizeExerciseName, now } from './shared';
 
+// 種目マスタはユーザー作成とプリセット由来を同じExerciseテーブルで扱う。
 export const exerciseRepository: ExerciseRepositoryPort = {
   async listActive() {
     return (await db.exercises.toArray()).filter((exercise) => exercise.isActive)
@@ -13,6 +14,7 @@ export const exerciseRepository: ExerciseRepositoryPort = {
   listPresets: () => db.exercisePresets.orderBy('sortOrder').toArray(),
   async create(input) {
     const all = await db.exercises.toArray();
+    // Unicode正規化後の名称で重複を防ぎ、全角半角違いの同一種目を増やさない。
     if (all.some((exercise) => normalizeExerciseName(exercise.name) === normalizeExerciseName(input.name))) throw new DuplicateExerciseNameError(input.name);
     const timestamp = now();
     const exercise = { id: uuid(), ...input, sortOrder: all.length ? Math.max(...all.map((item) => item.sortOrder)) + 10 : 10, isActive: true, sourcePresetId: null, createdAt: timestamp, updatedAt: timestamp };
@@ -38,6 +40,7 @@ export const exerciseRepository: ExerciseRepositoryPort = {
     const maxOrder = exercises.length ? Math.max(...exercises.map((exercise) => exercise.sortOrder)) : 0;
     const selected = presets.filter((preset) => ids.includes(preset.id) && !added.has(preset.id) && !names.has(normalizeExerciseName(preset.name)));
     const timestamp = now();
+    // プリセットIDと名称の両方で重複を避けるため、スキップ件数も呼び出し元へ返す。
     await db.exercises.bulkPut(selected.map((preset, index) => ({ id: uuid(), name: preset.name, bodyPart: preset.bodyPart, equipmentType: preset.equipmentType, sortOrder: maxOrder + (index + 1) * 10, isActive: true, sourcePresetId: preset.id, createdAt: timestamp, updatedAt: timestamp })));
     return { addedCount: selected.length, skippedCount: ids.length - selected.length };
   }

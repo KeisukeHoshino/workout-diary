@@ -8,6 +8,7 @@ import { graphRangeLabels } from '../../domain/rules';
 import { usePwaInstall } from '../../pwa/PwaInstallProvider';
 import { useAsyncData } from '../shared/useAsyncData';
 
+// 設定画面は端末内データの出入口を担うため、破壊操作は必ず確認を挟む。
 export function SettingsPage() {
   const [message, setMessage] = useState('');
   const [installMessage, setInstallMessage] = useState('');
@@ -140,6 +141,7 @@ export function SettingsPage() {
             <button className="secondary-button" type="button" onClick={async () => {
               try {
                 const backup = await appServices.settings.exportBackup();
+                // Blob URLで一時的にJSONを生成し、サーバーへ送らずローカルで保存させる。
                 const url = URL.createObjectURL(new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' }));
                 const anchor = document.createElement('a');
                 anchor.href = url;
@@ -158,6 +160,7 @@ export function SettingsPage() {
                 const result = appServices.settings.validateBackup(JSON.parse(await file.text()));
                 if (!result.valid) throw new Error(result.errors.join(' '));
                 const warning = result.warnings.length ? `\n警告: ${result.warnings.join(' ')}` : '';
+                // 復元はreplace方式だけなので、検証後も最後にユーザー確認を必ず挟む。
                 if (!confirm(`現在のデータをバックアップで置き換えますか？${warning}`)) return;
                 await appServices.settings.restoreBackup(result.document, 'replace');
                 setMessage('バックアップから復元しました。');

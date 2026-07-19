@@ -9,6 +9,7 @@ import { validateName } from "../../domain/validation";
 import { useAsyncData } from "../shared/useAsyncData";
 import { SelectedExerciseOrder } from "./components/SelectedExerciseOrder";
 
+// 編集中のメニューは、保存時にこの配列順がそのままMenuTemplateExercise.sortOrderへ反映される。
 interface MenuDraft {
   id: string;
   name: string;
@@ -70,6 +71,7 @@ export function MenusPage() {
   }
 
   function startEditing(item: MenuTemplateDetail) {
+    // 既存明細のsortOrderを維持したまま編集フォームへ載せる。
     setEditingMenu({
       id: item.menu.id,
       name: item.menu.name,
@@ -83,6 +85,7 @@ export function MenusPage() {
   function toggleEditingExercise(exerciseId: string, checked: boolean) {
     setEditingMenu((current) => {
       if (!current) return current;
+      // 追加時は末尾に置き、ユーザーが必要に応じて並び順リストで移動できるようにする。
       return {
         ...current,
         exerciseIds: checked
