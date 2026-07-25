@@ -32,22 +32,22 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@cloudflare/vite-plugin": "^1.42.1",
-    "@eslint/js": "^9",
-    "@playwright/test": "^1.61.1",
-    "@testing-library/jest-dom": "^6.9.1",
+    "@cloudflare/vite-plugin": "^1.47.0",
+    "@eslint/js": "^10",
+    "@playwright/test": "^1.62.0",
+    "@testing-library/jest-dom": "^7.0.0",
     "@testing-library/react": "^16.3.2",
     "@types/node": "^26.1.1",
     "@types/react": "^18.3.23",
     "@types/react-dom": "^18.3.7",
-    "eslint": "^9",
+    "eslint": "^10",
     "eslint-import-resolver-typescript": "^4.4.5",
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "fake-indexeddb": "^6.2.5",
-    "typescript": "^5.8.3",
-    "typescript-eslint": "^8.64.0",
+    "typescript": "^7.0.2",
+    "typescript-eslint": "^8.65.0",
     "vitest": "^4.1.10",
-    "wrangler": "^4.103.0"
+    "wrangler": "^4.114.0"
   }
 }
